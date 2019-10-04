@@ -1,6 +1,6 @@
 # wkskel
 
-A library for scientific analysis and manipulation of neurite tracing skeleton representations.
+A library for scientific analysis and manipulation of neurite skeleton representations.
 
 ## Package installation with pip (local)
 
