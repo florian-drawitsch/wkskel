@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional
 
 import wknml
 
-from wkskel import Nodes
+from .nodes import Nodes
 
 # TODO: Implement: Construct without nml, only with parameters provided
 # TODO: Remove comments attribute
@@ -379,7 +379,7 @@ class Skeleton:
     def _nml_to_skeleton(self, nml):
 
         for tree in nml.trees:
-            nodes = Skeleton._nml_nodes_to_nodes(nml_nodes=tree.make_nodes, nml_comments=nml.comments)
+            nodes = Skeleton._nml_nodes_to_nodes(nml_nodes=tree.nodes, nml_comments=nml.comments)
             self.nodes.append(nodes)
             self.edges.append(np.array([(edge.source, edge.target) for edge in tree.edges], dtype=np.uint32))
             self.names.append(tree.name)
