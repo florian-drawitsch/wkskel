@@ -7,7 +7,9 @@ from typing import List, Tuple, Optional
 import wknml
 
 from .nodes import Nodes
-
+#
+# TODO MAJOR: Move away from node and tree ids, replace with linear indices (idx). Add idx column to Nodes?
+#
 # TODO: Implement: Construct without nml, only with parameters provided
 # TODO: Remove comments attribute
 # TODO: Implement: Delete group (non trivial, need to attach all children of group to specified base)
