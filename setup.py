@@ -8,9 +8,9 @@ setuptools.setup(
     version="0.0.1",
     author="Florian Drawitsch",
     author_email="florian.drawitsch@brain.mpg.de",
-    description="A library for scientific analysis and manipulation of skeleton representations of neurite tracings",
+    description="A library for scientific analysis and manipulation of neurite tracing skeleton representations",
     long_description_content_type="text/markdown",
-    url="https://github.com/florian-drawitsch/wkskel",
+    url="https://gitlab.mpcdf.mpg.de/connectomics/wkskel",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
