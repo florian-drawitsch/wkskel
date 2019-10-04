@@ -2,12 +2,10 @@ name: wkskel
 
 dependencies:
   - python=3.7
+  - pip
   - numpy
-  - matplotlib
   - pandas
   - networkx
+  - matplotlib
   - pip:
     - wknml
-
-
-
