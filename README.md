@@ -1,6 +1,6 @@
 # wkskel
 
-A library for scientific analysis and manipulation of neurite skeleton representations.
+A python library for scientific analysis and manipulation of webKnossos skeleton tracings.
 
 ## Package installation with pip (local)
 
@@ -26,4 +26,4 @@ conda env create -f environment.yml
 Then, to activate the environment run
 ``` bash
 conda activate wkskel
-```
+```s

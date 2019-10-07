@@ -15,3 +15,6 @@ num_edges_all = [x.shape[0] for x in skel.edges]
 print('Number of nodes in each tree: {}'.format(num_nodes_all))
 print('Number of edges in each tree: {}'.format(num_edges_all))
 
+skel.node_idx_to_id(3, 5)
+skel.plot()
+

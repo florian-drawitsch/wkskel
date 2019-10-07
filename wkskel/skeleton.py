@@ -8,8 +8,6 @@ import wknml
 
 from .nodes import Nodes
 #
-# TODO MAJOR: Move away from node and tree ids, replace with linear indices (idx). Add idx column to Nodes?
-#
 # TODO: Implement: Construct without nml, only with parameters provided
 # TODO: Remove comments attribute
 # TODO: Implement: Delete group (non trivial, need to attach all children of group to specified base)
@@ -119,20 +117,22 @@ class Skeleton:
                 color=colors[node_idx]
             )
 
-    def delete_tree(self, tree_id):
-        """ Deletes tree with specified tree_id
+    def delete_tree(self, idx: int, id: int = None):
+        """ Deletes tree with specified idx
 
         Args:
-            tree_id: Tree_id of tree to be deleted
+            idx: Linear index of tree to be deleted
 
         """
-        tree_idx = self.tree_ids.index(tree_id)
-        self.nodes.pop(tree_idx)
-        self.edges.pop(tree_idx)
-        self.names.pop(tree_idx)
-        self.colors.pop(tree_idx)
-        self.tree_ids.pop(tree_idx)
-        self.group_ids.pop(tree_idx)
+        if id is not None:
+            idx = self.node_id_to_idx(id)
+
+        self.nodes.pop(idx)
+        self.edges.pop(idx)
+        self.names.pop(idx)
+        self.colors.pop(idx)
+        self.tree_ids.pop(idx)
+        self.group_ids.pop(idx)
 
     def add_group(self, parent_id: int = None, id: int = None, name: str = None):
         """ Adds a new group to skeleton object
@@ -236,37 +236,8 @@ class Skeleton:
 
         return nodes
 
-    def get_highest_tree_id(self):
-        """ Returns highest global tree id
-
-        Returns:
-            tree_id (int): Highest global tree id
-
-        """
-        return max(self.tree_ids)
-
-    def get_highest_node_id(self, tree_ids: List[int] = None) -> int:
-        """ Returns highest (global) node_id for all trees (default) or specified trees
-
-        Args:
-            tree_ids (list of int, optional): tree_ids for which highest node_id should be returned
-                Default: None, i.e. highest global node_id for all trees is returned
-
-        Returns:
-            node_id (int): Highest node id
-
-        """
-        if tree_ids is None:
-            tree_ids = self.tree_ids
-
-        node_id = 0
-        for tree_id in self.tree_ids:
-            node_id = max([node_id, self.nodes[self.tree_ids.index(tree_id)]['id'].max()])
-
-        return node_id
-
-    def get_idx_for_node_id(self, node_id: int) -> (int, int):
-        """ Gets the linear tree and node indices for the provided node id
+    def node_id_to_idx(self, node_id: int) -> (int, int):
+        """ Returns the linear tree and node indices for the provided node id
 
         Args:
             node_id: Node id for which linear tree and node indices should be returned
@@ -284,6 +255,21 @@ class Skeleton:
 
         return node_idx, tree_idx
 
+    def node_idx_to_id(self, node_idx: int, tree_idx: int) -> int:
+        """ Returns the node id for the provided tree and node idx
+
+        Args:
+            node_idx: Node index for which node id should be returned
+            tree_idx: Tree index on which node in question resides
+
+        Returns:
+            node_id: Node id corresponding to the provided indices
+        """
+
+        node_id = self.nodes[tree_idx].loc[node_idx, 'id'].values[0]
+
+        return node_id
+
     def get_shortest_path(self, node_id_start: int, node_id_end: int) -> List[int]:
         """ Gets the shortest path between two nodes of a tree
 
@@ -296,8 +282,8 @@ class Skeleton:
 
         """
 
-        _, skel_idx_start = self.get_idx_for_node_id(node_id_start)
-        _, skel_idx_end = self.get_idx_for_node_id(node_id_end)
+        _, skel_idx_start = self.node_id_to_idx(node_id_start)
+        _, skel_idx_end = self.node_id_to_idx(node_id_end)
 
         assert skel_idx_start == skel_idx_end, 'Provided node ids need to be part of the same tree'
 
@@ -366,6 +352,35 @@ class Skeleton:
             wknml.write_nml(f, nml)
 
     # Convenience Methods
+    def get_highest_tree_id(self):
+        """ Returns highest global tree id
+
+        Returns:
+            tree_id (int): Highest global tree id
+
+        """
+        return max(self.tree_ids)
+
+    def get_highest_node_id(self, tree_ids: List[int] = None) -> int:
+        """ Returns highest (global) node_id for all trees (default) or specified trees
+
+        Args:
+            tree_ids (list of int, optional): tree_ids for which highest node_id should be returned
+                Default: None, i.e. highest global node_id for all trees is returned
+
+        Returns:
+            node_id (int): Highest node id
+
+        """
+        if tree_ids is None:
+            tree_ids = self.tree_ids
+
+        node_id = 0
+        for tree_id in self.tree_ids:
+            node_id = max([node_id, self.nodes[self.tree_ids.index(tree_id)]['id'].max()])
+
+        return node_id
+
     def num_trees(self) -> int:
         """Returns number of trees contained in skeleton object
 
