@@ -26,4 +26,4 @@ conda env create -f environment.yml
 Then, to activate the environment run
 ``` bash
 conda activate wkskel
-```s
+```

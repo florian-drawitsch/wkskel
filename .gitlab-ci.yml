@@ -9,4 +9,4 @@ test:
   - apt-get update -qy
   - apt-get install -y python3.7 python3-pip
   - pip3 install -r requirements.txt
-  - python tests/test_dummy.py
+  - python3 tests/test_dummy.py
