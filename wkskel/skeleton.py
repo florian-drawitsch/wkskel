@@ -78,6 +78,27 @@ class Skeleton:
         self.names.append(name)
         self.colors.append(color)
 
+    def add_tree_from_skel(self,
+                           skel: 'Skeleton',
+                           tree_inds: List[int] = None,
+                           tree_names: List[str] = None):
+        """ Appends new tree(s) to skeleton from another skeleton object
+
+        Args:
+            skel: A skeleton object different from the one calling this method
+            tree_inds (optional): Linear indices of the trees in skel to add to obj. Default: all trees in skel.
+            tree_names (optional): New tree names. Default: Tree names in skeleton object to be added are used
+        """
+
+        if tree_inds is None:
+            tree_inds = list(range(skel.num_trees()))
+
+        if tree_names is None:
+            tree_names = self.names
+
+        a = 1
+
+
     def add_nodes_as_trees(self,
                            nodes: Nodes,
                            tree_ids: List[int] = None,
