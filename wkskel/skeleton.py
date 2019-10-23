@@ -2,19 +2,15 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, art3d
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Union, Optional
 
 import wknml
-
 from .nodes import Nodes
-#
-# TODO: Implement: Construct without nml, only with parameters provided
-# TODO: Remove comments attribute
-# TODO: Implement: Delete group (non trivial, need to attach all children of group to specified base)
 
+# TODO: Implement: Construct without nml, only with parameters provided
 
 class Skeleton:
-    """The Skeleton class facilitates scientific analysis and manipulation of webKnossos tracings
+    """The Skeleton class facilitates scientific analysis and manipulation of webKnossos tracings.
 
     It is designed as a high-level interface for working with nml files generated e.g with webKnossos. It makes use of
     the (low-level) `wknml` package mostly as an I/O interface to nml files.
@@ -38,7 +34,6 @@ class Skeleton:
         self.group_ids = []
         self.groups = []
         self.branchpoints = []
-        self.comments = []
         self.parameters = {}
         self.defaults = self.DEFAULTS
 
@@ -57,7 +52,7 @@ class Skeleton:
                  group_id: int = None,
                  name: str = '',
                  color: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)):
-        """ Appends new tree to skeleton
+        """ Appends new tree to skeleton.
 
         Args:
             nodes (optional): Nodes representing tree to be added
@@ -78,26 +73,26 @@ class Skeleton:
         self.names.append(name)
         self.colors.append(color)
 
-    def add_tree_from_skel(self,
-                           skel: 'Skeleton',
-                           tree_inds: List[int] = None,
-                           tree_names: List[str] = None):
-        """ Appends new tree(s) to skeleton from another skeleton object
+    def add_tree_from_skel(self, skel: 'Skeleton'):
+        """ Appends new tree(s) to skeleton from another skeleton object.
 
         Args:
             skel: A skeleton object different from the one calling this method
-            tree_inds (optional): Linear indices of the trees in skel to add to obj. Default: all trees in skel.
-            tree_names (optional): New tree names. Default: Tree names in skeleton object to be added are used
         """
 
-        if tree_inds is None:
-            tree_inds = list(range(skel.num_trees()))
+        skel._reset_node_ids(self.max_node_id() + 1)
+        skel._reset_tree_ids(self.max_tree_id() + 1)
+        skel._reset_group_ids(self.max_group_id() + 1)
 
-        if tree_names is None:
-            tree_names = self.names
+        self.nodes = self.nodes + skel.nodes
+        self.edges = self.edges + skel.edges
+        self.tree_ids = self.tree_ids + skel.tree_ids
+        self.group_ids = self.group_ids + skel.group_ids
+        self.groups = self.groups + skel.groups
+        self.names = self.names + skel.names
+        self.colors = self.colors + skel.colors
 
-        a = 1
-
+        return self
 
     def add_nodes_as_trees(self,
                            nodes: Nodes,
@@ -105,7 +100,7 @@ class Skeleton:
                            group_ids: List[int] = None,
                            names: List[str] = None,
                            colors: List[Tuple[float, float, float, float]] = None):
-        """ Appends each of the specified nodes as separate trees to the skeleton (1 node each)
+        """ Appends each of the specified nodes as separate trees to the skeleton (1 node each).
 
         Args:
             nodes: Nodes representing the trees to be added
@@ -116,7 +111,7 @@ class Skeleton:
         """
 
         if tree_ids is None:
-            tree_id_start = self.get_highest_tree_id() + 1
+            tree_id_start = self.max_tree_id() + 1
             tree_id_end = tree_id_start + len(nodes)
             tree_ids = list(range(tree_id_start, tree_id_end))
 
@@ -139,10 +134,11 @@ class Skeleton:
             )
 
     def delete_tree(self, idx: int, id: int = None):
-        """ Deletes tree with specified idx
+        """ Deletes tree with specified idx or id.
 
         Args:
             idx: Linear index of tree to be deleted
+            id: Id of tree to be deleted
 
         """
         if id is not None:
@@ -156,7 +152,7 @@ class Skeleton:
         self.group_ids.pop(idx)
 
     def add_group(self, parent_id: int = None, id: int = None, name: str = None):
-        """ Adds a new group to skeleton object
+        """ Adds a new group to skeleton object.
 
         Args:
             parent_id: Parent group id to which new group is added as a child. Default: None (root group)
@@ -179,7 +175,6 @@ class Skeleton:
             name = 'Group {}'.format(id)
 
         new_group = wknml.Group(id, name, [])
-
         if parent_id is None:
             self.groups.append(new_group)
         else:
@@ -206,7 +201,7 @@ class Skeleton:
                    interpolation: Optional[List[bool]] = None,
                    time: Optional[List[int]] = None,
                    comment: Optional[List[int]] = None) -> Nodes:
-        """ Generates new nodes table from data
+        """ Generates new nodes table from data.
 
         Args:
             position_x: Node position x
@@ -229,7 +224,7 @@ class Skeleton:
 
         """
         if id is None:
-            id_max = self.get_highest_node_id()
+            id_max = self.max_node_id()
             id = list(range(id_max+1, id_max+len(position_x)+1))
 
         if radius is None:
@@ -244,7 +239,7 @@ class Skeleton:
         return nodes
 
     def make_nodes_from_positions(self, positions: np.ndarray) -> Nodes:
-        """ Generates new nodes table from positions only
+        """ Generates new nodes table from positions only.
 
         Args:
             positions: Numpy array holding the x y z positions to be returned as nodes in a Nodes table
@@ -258,7 +253,7 @@ class Skeleton:
         return nodes
 
     def node_id_to_idx(self, node_id: int) -> (int, int):
-        """ Returns the linear tree and node indices for the provided node id
+        """ Returns the linear tree and node indices for the provided node id.
 
         Args:
             node_id: Node id for which linear tree and node indices should be returned
@@ -277,7 +272,7 @@ class Skeleton:
         return node_idx, tree_idx
 
     def node_idx_to_id(self, node_idx: int, tree_idx: int) -> int:
-        """ Returns the node id for the provided tree and node idx
+        """ Returns the node id for the provided tree and node idx.
 
         Args:
             node_idx: Node index for which node id should be returned
@@ -292,7 +287,7 @@ class Skeleton:
         return node_id
 
     def get_shortest_path(self, node_id_start: int, node_id_end: int) -> List[int]:
-        """ Gets the shortest path between two nodes of a tree
+        """ Gets the shortest path between two nodes of a tree.
 
         Args:
             node_id_start: Node id of start node
@@ -319,16 +314,16 @@ class Skeleton:
              colors: Optional[List[Tuple[float, float, float, float]]] = None,
              um_scale: bool = True,
              ax: Optional[plt.axes] = None):
-        """ Generates a (3D) line plot of the trees contained in the skeleton object
+        """ Generates a (3D) line plot of the trees contained in the skeleton object.
 
         Args:
             tree_inds: Tree indices to be plotted
             colors: Colors in which trees should be plotted
             um_scale: Plot on micrometer scale instead of voxel scale
-            ax: Axes to be plotted on
+            ax: Axes to be plotted on.
 
         Returns:
-            ax: Plot axes
+            ax: Plot axes.
         """
 
         if tree_inds is None:
@@ -362,7 +357,7 @@ class Skeleton:
         return ax
 
     def write_nml(self, nml_write_path):
-        """ Writes the present state of the skeleton object to a .nml file
+        """ Writes the present state of the skeleton object to a .nml file.
 
         Args:
             nml_write_path: Path to which .nml file should be written
@@ -373,49 +368,67 @@ class Skeleton:
             wknml.write_nml(f, nml)
 
     # Convenience Methods
-    def get_highest_tree_id(self):
-        """ Returns highest global tree id
+    def min_node_id(self) -> int:
+        """ Returns lowest global node id."""
+        return min([min(nodes.id) for nodes in self.nodes])
 
-        Returns:
-            tree_id (int): Highest global tree id
+    def max_node_id(self) -> int:
+        """ Returns highest global node id."""
+        return max([max(nodes.id) for nodes in self.nodes])
 
-        """
+    def min_tree_id(self) -> int:
+        """ Returns lowest global tree id."""
+        return min(self.tree_ids)
+
+    def max_tree_id(self) -> int:
+        """ Returns highest global tree id."""
         return max(self.tree_ids)
 
-    def get_highest_node_id(self, tree_ids: List[int] = None) -> int:
-        """ Returns highest (global) node_id for all trees (default) or specified trees
+    def min_group_id(self) -> int:
+        """ Returns lowest group id."""
+        return int(min(np.asarray(self.group_ids, dtype=np.float)))
 
-        Args:
-            tree_ids (list of int, optional): tree_ids for which highest node_id should be returned
-                Default: None, i.e. highest global node_id for all trees is returned
-
-        Returns:
-            node_id (int): Highest node id
-
-        """
-        if tree_ids is None:
-            tree_ids = self.tree_ids
-
-        node_id = 0
-        for tree_id in self.tree_ids:
-            node_id = max([node_id, self.nodes[self.tree_ids.index(tree_id)]['id'].max()])
-
-        return node_id
+    def max_group_id(self) -> int:
+        """ Returns highest group id."""
+        return int(max(np.asarray(self.group_ids, dtype=np.float)))
 
     def num_trees(self) -> int:
-        """Returns number of trees contained in skeleton object
-
-        Returns:
-            num_trees: Number of trees contained in skeleton object
-
-        """
-        num_trees = len(self.nodes)
-
-        return num_trees
+        """Returns number of trees contained in skeleton object."""
+        return len(self.nodes)
 
     # Private Methods
-    def _nml_to_skeleton(self, nml):
+    def _reset_node_ids(self, start_id: int):
+        """ Resets node ids of skeleton to begin with start value.
 
+        Args:
+            start_id: Start value to which the lowest node id should be set.
+        """
+        add_id = start_id - self.min_node_id()
+        for tree_idx, _ in enumerate(self.nodes):
+            self.nodes[tree_idx].id += add_id
+            self.edges[tree_idx] += add_id
+
+    def _reset_tree_ids(self, start_id: int):
+        """ Resets tree ids of skeleton to begin with start value.
+
+        Args:
+            start_id: Start value to which the lowest tree id should be set.
+        """
+        add_id = start_id - self.min_tree_id()
+        self.tree_ids = [tree_id + add_id for tree_id in self.tree_ids]
+
+    def _reset_group_ids(self, start_id: int):
+        """ Resets group ids of skeleton to begin with start value.
+
+        Args:
+            start_id: Start value to which the lowest group id should be set.
+        """
+        add_id = start_id - self.min_group_id()
+        self.group_ids = [i + add_id if i is not None else i for i in self.group_ids]
+        self.groups = [Skeleton._group_modify_id(group, id_modifier=lambda x: x + add_id) for group in self.groups]
+
+    def _nml_to_skeleton(self, nml):
+        """ Converts wknml to skeleton data structures."""
         for tree in nml.trees:
             nodes = Skeleton._nml_nodes_to_nodes(nml_nodes=tree.nodes, nml_comments=nml.comments)
             self.nodes.append(nodes)
@@ -427,11 +440,10 @@ class Skeleton:
 
         self.groups = nml.groups
         self.branchpoints = nml.branchpoints
-        self.comments = nml.comments
         self.parameters = nml.parameters
 
     def _skeleton_to_nml(self):
-
+        """ Converts skeleton to wknml data structures."""
         trees = []
         for tree_idx, tree_id in enumerate(self.tree_ids):
             nml_nodes = Skeleton._nodes_to_nml_nodes(self.nodes[tree_idx])
@@ -447,7 +459,6 @@ class Skeleton:
             trees.append(tree)
 
         nml_comments = self._skeleton_to_nml_comments()
-
         nml = wknml.NML(
             parameters=self.parameters,
             trees=trees,
@@ -459,7 +470,7 @@ class Skeleton:
         return nml
 
     def _skeleton_to_nml_comments(self):
-
+        """ Converts skeleton to wknml comments."""
         nml_comments = []
         for nodes in self.nodes:
             comment_nodes = nodes[nodes['comment'].notnull()]
@@ -475,6 +486,7 @@ class Skeleton:
     # Static Private Methods
     @ staticmethod
     def _nml_nodes_to_nodes(nml_nodes, nml_comments):
+        """ Converts wknml nodes (list of named tuples) to skeleton nodes (DataFrame subclass)."""
 
         data = [(node.id, node.position[0], node.position[1], node.position[2], node.radius, node.rotation[0],
                  node.rotation[1], node.rotation[2], node.inVp, node.inMag, node.bitDepth, node.interpolation,
@@ -494,7 +506,7 @@ class Skeleton:
 
     @ staticmethod
     def _nodes_to_nml_nodes(nodes):
-
+        """ Converts skeleton nodes (DataFrame subclass) to wknml nodes (list of named tuples)."""
         nml_nodes = []
         for idx, row in nodes.iterrows():
             nml_node = wknml.Node(
@@ -514,7 +526,7 @@ class Skeleton:
 
     @ staticmethod
     def _edges_to_nml_edges(edges):
-
+        """ Converts skeleton edges (numpy array) to wknml edges (list of named tuples)."""
         nml_edges = []
         for idx in range(edges.shape[0]):
             nml_edge = wknml.Edge(
@@ -527,7 +539,7 @@ class Skeleton:
 
     @staticmethod
     def _group_append(groups, id, new_group):
-
+        """ Appends new group as a child of existing group with specified id. Currently only works up to depth=3."""
         path_inds = []
         _, _, idx = Skeleton._group_parent(groups, id)
         while id is not None:
@@ -547,7 +559,7 @@ class Skeleton:
 
     @staticmethod
     def _group_parent(groups, id, parent_id=None, parent_idx=None, child_idx=None):
-
+        """ Returns the id of the parent group for a (child) group with specified id."""
         for group in groups:
             if id in [x.id for x in group.children]:
                 parent_id = group.id
@@ -557,6 +569,14 @@ class Skeleton:
                 parent_id, parent_idx, child_idx = Skeleton._group_parent(group.children, id, parent_id, parent_idx, child_idx)
 
         return parent_id, parent_idx, child_idx
+
+    @staticmethod
+    def _group_modify_id(group, id_modifier):
+        """ Modifies group ids with the passed id_modifier (e.g. lambda) function."""
+        group = group._replace(id=id_modifier(group.id))
+        group = group._replace(children=list(map(lambda g: Skeleton._group_modify_id(g, id_modifier), group.children)))
+
+        return group
 
 
 
