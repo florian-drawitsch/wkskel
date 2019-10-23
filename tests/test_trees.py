@@ -3,7 +3,6 @@ from wkskel import Skeleton
 
 
 def add_tree_from_skel():
-    print('Testing '+__name__)
 
     skel = Skeleton('testdata/01_ref.nml')
     skel.add_tree_from_skel(Skeleton('testdata/02_ref.nml'))
