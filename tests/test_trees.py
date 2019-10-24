@@ -15,8 +15,9 @@ def add_tree_from_skel():
     _, c = np.unique(np.concatenate([nodes.id.values for nodes in skel_gen.nodes]), return_counts=True)
     assert all(c < 2)
 
-    # Test for equal numbers of nodes in both generated and reference merge nml
+    # Test for equal numbers of nodes and edges in both generated and reference merge nml
     assert set([len(nodes) for nodes in skel_gen.nodes]) == set([len(nodes) for nodes in skel_ref.nodes])
+    assert set([len(edges) for edges in skel_gen.edges]) == set([len(edges) for edges in skel_ref.edges])
 
 
 if __name__ == '__main__':
