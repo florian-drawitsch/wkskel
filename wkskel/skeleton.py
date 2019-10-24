@@ -136,7 +136,7 @@ class Skeleton:
                 color=colors[node_idx]
             )
 
-    def delete_tree(self, idx: int, id: int = None):
+    def delete_tree(self, idx: int = None, id: int = None):
         """ Deletes tree with specified idx or id.
 
         Args:
@@ -145,7 +145,7 @@ class Skeleton:
 
         """
         if id is not None:
-            idx = self.node_id_to_idx(id)
+            idx = self.tree_ids.index(id)
 
         self.nodes.pop(idx)
         self.edges.pop(idx)
