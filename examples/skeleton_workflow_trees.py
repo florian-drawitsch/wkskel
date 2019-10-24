@@ -1,9 +1,8 @@
-from wkskel import Nodes, Skeleton
-
-nml_source = '../testdata/test_01.nml'
+import numpy as np
+from wkskel import Skeleton
 
 # Construct skeleton object from nml file
-skel = Skeleton(nml_source)
+skel = Skeleton('testdata/01_ref.nml')
 
 # Return number of trees contained in the skeleton
 num_trees = skel.num_trees()
@@ -15,6 +14,4 @@ num_edges_all = [x.shape[0] for x in skel.edges]
 print('Number of nodes in each tree: {}'.format(num_nodes_all))
 print('Number of edges in each tree: {}'.format(num_edges_all))
 
-skel.node_idx_to_id(3, 5)
-skel.plot()
 

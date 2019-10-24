@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, art3d
-from typing import List, Tuple, Union, Optional
+from typing import Union, Sequence, List, Tuple, Optional
 
 import wknml
 from .nodes import Nodes
@@ -144,6 +144,7 @@ class Skeleton:
             id: Id of tree to be deleted
 
         """
+
         if id is not None:
             idx = self.tree_ids.index(id)
 
@@ -167,6 +168,7 @@ class Skeleton:
             name: Name of added group
 
         """
+
         assert (parent_id in self.group_ids), ('Parent id does not exist')
 
         if id is None:
@@ -226,6 +228,7 @@ class Skeleton:
             nodes: Nodes object
 
         """
+
         if id is None:
             id_max = self.max_node_id()
             id = list(range(id_max+1, id_max+len(position_x)+1))
@@ -251,43 +254,40 @@ class Skeleton:
             nodes: Nodes object
 
         """
-        nodes = self.nodes(*list(positions.T))
+
+        nodes = Nodes().append_from_numpy(positions)
 
         return nodes
 
-    def node_id_to_idx(self, node_id: int) -> (int, int):
-        """ Returns the linear tree and node indices for the provided node id.
+    def get_distance_to_nodes(self,
+                              position: Union[Sequence[int], np.ndarray],
+                              unit: str = 'um') -> List[np.ndarray]:
+        """ Get the distance of nodes on one, multiple or all trees to specified position.
 
         Args:
-            node_id: Node id for which linear tree and node indices should be returned
+            position: position specifying x, y, z coordinates (voxels) to which the node distances should be computed
+            unit (optional): Unit flag specifying in which unit the distances should be returned.
+                Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer). Default: 'um' (micrometer)
 
         Returns:
-            node_idx: Node index corresponding to the provided node id
-            tree_idx: Tree index corresponding to the provided node id
+            distances: List of arrays holding distances
+
         """
 
-        for tree_idx, nodes in enumerate(self.nodes):
-            index_list = nodes[nodes['id'] == node_id].index.tolist()
-            if index_list:
-                node_idx = index_list[0]
-                break
+        unit_factors = {
+            'vx': np.array((1, 1, 1)),
+            'nm': np.array(self.parameters.scale),
+            'um': np.array(self.parameters.scale)/1000
+        }
+        assert unit in unit_factors.keys(), 'Invalid unit'
+        unit_factor = unit_factors[unit]
 
-        return node_idx, tree_idx
+        distances = []
+        for nodes in self.nodes:
+            distances.append(np.sqrt(np.sum(((nodes.position.values - position) * unit_factor.reshape(1, 3))**2, axis=1)))
 
-    def node_idx_to_id(self, node_idx: int, tree_idx: int) -> int:
-        """ Returns the node id for the provided tree and node idx.
+        return distances
 
-        Args:
-            node_idx: Node index for which node id should be returned
-            tree_idx: Tree index on which node in question resides
-
-        Returns:
-            node_id: Node id corresponding to the provided indices
-        """
-
-        node_id = self.nodes[tree_idx].loc[node_idx, 'id'].values[0]
-
-        return node_id
 
     def get_shortest_path(self, node_id_start: int, node_id_end: int) -> List[int]:
         """ Gets the shortest path between two nodes of a tree.
@@ -351,7 +351,6 @@ class Skeleton:
             for edge in edges:
                 n0 = nodes['position'][nodes.id == edge[0]].values[0]
                 n1 = nodes['position'][nodes.id == edge[1]].values[0]
-
                 ax.plot([n0[0], n1[0]],
                         [n0[1], n1[1]],
                         [n0[2], n1[2]],
@@ -366,13 +365,33 @@ class Skeleton:
             nml_write_path: Path to which .nml file should be written
 
         """
+
         nml = self._skeleton_to_nml()
         with open(nml_write_path, "wb") as f:
             wknml.write_nml(f, nml)
 
     # Convenience Methods
+    def node_id_to_idx(self, node_id: int) -> (int, int):
+        """ Returns the linear tree and node indices for the provided node id."""
+
+        for tree_idx, nodes in enumerate(self.nodes):
+            index_list = nodes[nodes['id'] == node_id].index.tolist()
+            if index_list:
+                node_idx = index_list[0]
+                break
+
+        return node_idx, tree_idx
+
+    def node_idx_to_id(self, node_idx: int, tree_idx: int) -> int:
+        """ Returns the node id for the provided tree and node idx."""
+
+        node_id = self.nodes[tree_idx].loc[node_idx, 'id'].values[0]
+
+        return node_id
+
     def min_group_id(self) -> int:
         """ Returns lowest group id. If no groups are defined, return None"""
+
         group_ids = np.asarray(self.group_ids, dtype=np.float)
         if np.all(np.isnan(group_ids)):
             group_id = None
@@ -383,6 +402,7 @@ class Skeleton:
 
     def max_group_id(self) -> int:
         """ Returns highest group id. If no groups are defined, return None"""
+
         group_ids = np.asarray(self.group_ids, dtype=np.float)
         if np.all(np.isnan(group_ids)):
             group_id = None
@@ -393,22 +413,27 @@ class Skeleton:
 
     def min_node_id(self) -> int:
         """ Returns lowest global node id."""
+
         return min([min(nodes.id) for nodes in self.nodes])
 
     def max_node_id(self) -> int:
         """ Returns highest global node id."""
+
         return max([max(nodes.id) for nodes in self.nodes])
 
     def min_tree_id(self) -> int:
         """ Returns lowest global tree id."""
+
         return min(self.tree_ids)
 
     def max_tree_id(self) -> int:
         """ Returns highest global tree id."""
+
         return max(self.tree_ids)
 
     def num_trees(self) -> int:
         """Returns number of trees contained in skeleton object."""
+
         return len(self.nodes)
 
     # Private Methods
@@ -418,6 +443,7 @@ class Skeleton:
         Args:
             start_id: Start value to which the lowest node id should be set.
         """
+
         add_id = start_id - self.min_node_id()
         for tree_idx, _ in enumerate(self.nodes):
             self.nodes[tree_idx].id += add_id
@@ -429,6 +455,7 @@ class Skeleton:
         Args:
             start_id: Start value to which the lowest tree id should be set.
         """
+
         add_id = start_id - self.min_tree_id()
         self.tree_ids = [tree_id + add_id for tree_id in self.tree_ids]
 
@@ -438,6 +465,7 @@ class Skeleton:
         Args:
             start_id: Start value to which the lowest group id should be set.
         """
+
         min_group_id = self.min_group_id()
         if min_group_id is not None:
             add_id = start_id - min_group_id
@@ -446,6 +474,7 @@ class Skeleton:
 
     def _nml_to_skeleton(self, nml):
         """ Converts wknml to skeleton data structures."""
+
         for tree in nml.trees:
             nodes = Skeleton._nml_nodes_to_nodes(nml_nodes=tree.nodes, nml_comments=nml.comments)
             self.nodes.append(nodes)
@@ -461,6 +490,7 @@ class Skeleton:
 
     def _skeleton_to_nml(self):
         """ Converts skeleton to wknml data structures."""
+
         trees = []
         for tree_idx, tree_id in enumerate(self.tree_ids):
             nml_nodes = Skeleton._nodes_to_nml_nodes(self.nodes[tree_idx])
@@ -488,6 +518,7 @@ class Skeleton:
 
     def _skeleton_to_nml_comments(self):
         """ Converts skeleton to wknml comments."""
+
         nml_comments = []
         for nodes in self.nodes:
             comment_nodes = nodes[nodes['comment'].notnull()]
@@ -524,6 +555,7 @@ class Skeleton:
     @ staticmethod
     def _nodes_to_nml_nodes(nodes):
         """ Converts skeleton nodes (DataFrame subclass) to wknml nodes (list of named tuples)."""
+
         nml_nodes = []
         for idx, row in nodes.iterrows():
             nml_node = wknml.Node(
@@ -544,6 +576,7 @@ class Skeleton:
     @ staticmethod
     def _edges_to_nml_edges(edges):
         """ Converts skeleton edges (numpy array) to wknml edges (list of named tuples)."""
+
         nml_edges = []
         for idx in range(edges.shape[0]):
             nml_edge = wknml.Edge(
@@ -557,6 +590,7 @@ class Skeleton:
     @staticmethod
     def _group_append(groups, id, new_group):
         """ Appends new group as a child of existing group with specified id. Currently only works up to depth=3."""
+
         path_inds = []
         _, _, idx = Skeleton._group_parent(groups, id)
         while id is not None:
@@ -577,6 +611,7 @@ class Skeleton:
     @staticmethod
     def _group_parent(groups, id, parent_id=None, parent_idx=None, child_idx=None):
         """ Returns the id of the parent group for a (child) group with specified id."""
+
         for group in groups:
             if id in [x.id for x in group.children]:
                 parent_id = group.id
@@ -590,6 +625,7 @@ class Skeleton:
     @staticmethod
     def _group_modify_id(group, id_modifier):
         """ Modifies group ids with the passed id_modifier (e.g. lambda) function."""
+
         group = group._replace(id=id_modifier(group.id))
         group = group._replace(children=list(map(lambda g: Skeleton._group_modify_id(g, id_modifier), group.children)))
 
