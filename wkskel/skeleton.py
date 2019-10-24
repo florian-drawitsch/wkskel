@@ -82,7 +82,10 @@ class Skeleton:
 
         skel._reset_node_ids(self.max_node_id() + 1)
         skel._reset_tree_ids(self.max_tree_id() + 1)
-        skel._reset_group_ids(self.max_group_id() + 1)
+
+        max_group_id = self.max_group_id()
+        if max_group_id is not None:
+            skel._reset_group_ids(max_group_id + 1)
 
         self.nodes = self.nodes + skel.nodes
         self.edges = self.edges + skel.edges
@@ -368,6 +371,26 @@ class Skeleton:
             wknml.write_nml(f, nml)
 
     # Convenience Methods
+    def min_group_id(self) -> int:
+        """ Returns lowest group id. If no groups are defined, return None"""
+        group_ids = np.asarray(self.group_ids, dtype=np.float)
+        if np.all(np.isnan(group_ids)):
+            group_id = None
+        else:
+            group_id = int(np.nanmin(group_ids))
+
+        return group_id
+
+    def max_group_id(self) -> int:
+        """ Returns highest group id. If no groups are defined, return None"""
+        group_ids = np.asarray(self.group_ids, dtype=np.float)
+        if np.all(np.isnan(group_ids)):
+            group_id = None
+        else:
+            group_id = int(np.nanmax(group_ids))
+
+        return group_id
+
     def min_node_id(self) -> int:
         """ Returns lowest global node id."""
         return min([min(nodes.id) for nodes in self.nodes])
@@ -383,14 +406,6 @@ class Skeleton:
     def max_tree_id(self) -> int:
         """ Returns highest global tree id."""
         return max(self.tree_ids)
-
-    def min_group_id(self) -> int:
-        """ Returns lowest group id."""
-        return int(min(np.asarray(self.group_ids, dtype=np.float)))
-
-    def max_group_id(self) -> int:
-        """ Returns highest group id."""
-        return int(max(np.asarray(self.group_ids, dtype=np.float)))
 
     def num_trees(self) -> int:
         """Returns number of trees contained in skeleton object."""
@@ -423,16 +438,18 @@ class Skeleton:
         Args:
             start_id: Start value to which the lowest group id should be set.
         """
-        add_id = start_id - self.min_group_id()
-        self.group_ids = [i + add_id if i is not None else i for i in self.group_ids]
-        self.groups = [Skeleton._group_modify_id(group, id_modifier=lambda x: x + add_id) for group in self.groups]
+        min_group_id = self.min_group_id()
+        if min_group_id is not None:
+            add_id = start_id - min_group_id
+            self.group_ids = [i + add_id if i is not None else i for i in self.group_ids]
+            self.groups = [Skeleton._group_modify_id(group, id_modifier=lambda x: x + add_id) for group in self.groups]
 
     def _nml_to_skeleton(self, nml):
         """ Converts wknml to skeleton data structures."""
         for tree in nml.trees:
             nodes = Skeleton._nml_nodes_to_nodes(nml_nodes=tree.nodes, nml_comments=nml.comments)
             self.nodes.append(nodes)
-            self.edges.append(np.array([(edge.source, edge.target) for edge in tree.edges], dtype=np.uint32))
+            self.edges.append(np.array([(edge.source, edge.target) for edge in tree.edges]))
             self.names.append(tree.name)
             self.colors.append(tree.color)
             self.tree_ids.append(tree.id)
