@@ -6,11 +6,9 @@ stages:
 
 test:
   script:
-  - apt update -qy
-  - apt install software-properties-common
-  - add-apt-repository -y ppa:deadsnakes/ppa
-  - apt install -y python3.7 python3-pip
+  - apt-get update -qy
+  - apt-get install -y python3.7 python3-pip
   - pip3 install -r requirements.txt
   - pip3 install -e .
-  - python3.7 tests/test_constructor.py
-  - python3.7 tests/test_trees.py
+  - python3 tests/test_constructor.py
+  - python3 tests/test_trees.py
