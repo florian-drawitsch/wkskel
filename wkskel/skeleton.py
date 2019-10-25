@@ -111,6 +111,9 @@ class Skeleton:
         if tree_id is None:
             tree_id = self.num_trees() + 1
 
+        if group_id not in self.group_ids:
+            self.add_group(id=group_id)
+
         if color is None:
             color = self.defaults['tree']['color']
 
@@ -121,11 +124,40 @@ class Skeleton:
         self.names.append(name)
         self.colors.append(color)
 
-    def add_tree_from_skel(self, skel: 'Skeleton'):
-        """ Appends new tree(s) to skeleton from another skeleton object.
+    def add_tree_from_skel(self,
+                           skel: 'Skeleton',
+                           tree_idx: int,
+                           group_id: int = None):
+        """ Appends a specific tree contained in a different skeleton object to the skeleton.
 
         Args:
-            skel: A skeleton object different from the one calling this method
+            skel: Source skeleton object (different from the one calling this method) to be added
+            tree_idx: Source tree index of tree to be added
+            group_id (optional): Target group id to which the added tree should be assigned. Default: None
+        """
+
+        if group_id not in self.group_ids:
+            self.add_group(id=group_id)
+
+        skel._reset_node_ids(self.max_node_id() + 1)
+        skel._reset_tree_ids(self.max_tree_id() + 1)
+
+        self.nodes = self.nodes + [skel.nodes[tree_idx]]
+        self.edges = self.edges + [skel.edges[tree_idx]]
+        self.tree_ids = self.tree_ids + [skel.tree_ids[tree_idx]]
+        self.group_ids = self.group_ids + [group_id]
+        self.names = self.names + [skel.names[tree_idx]]
+        self.colors = self.colors + [skel.colors[tree_idx]]
+
+        return self
+
+    def add_trees_from_skel(self, skel: 'Skeleton'):
+        """ Appends all trees contained in a different skeleton object to the skeleton.
+
+        This method attempts to preserve the relative group structure found in the skeleton object to be added
+
+        Args:
+            skel: Source skeleton object (different from the one calling this method) to be added
         """
 
         skel._reset_node_ids(self.max_node_id() + 1)
@@ -336,7 +368,6 @@ class Skeleton:
 
         return distances
 
-
     def get_shortest_path(self, node_id_start: int, node_id_end: int) -> List[int]:
         """ Gets the shortest path between two nodes of a tree.
 
@@ -462,12 +493,12 @@ class Skeleton:
     def min_node_id(self) -> int:
         """ Returns lowest global node id."""
 
-        return min([min(nodes.id) for nodes in self.nodes])
+        return min([min(nodes.id) if len(nodes)>0 else 0 for nodes in self.nodes])
 
     def max_node_id(self) -> int:
         """ Returns highest global node id."""
 
-        return max([max(nodes.id) for nodes in self.nodes])
+        return max([max(nodes.id) if len(nodes)>0 else 0 for nodes in self.nodes])
 
     def min_tree_id(self) -> int:
         """ Returns lowest global tree id."""
