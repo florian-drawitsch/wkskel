@@ -1,20 +1,13 @@
 default:
-  image: ubuntu:latest
+  image: ubuntu:rolling
 
 stages:
   - test
 
 test:
   script:
-<<<<<<< HEAD
   - apt-get update -qy
   - apt-get install -y python3.7 python3-pip
-=======
-  - apt update -qy
-  - apt install -y software-properties-common
-  - add-apt-repository -y ppa:deadsnakes/ppa
-  - apt install -y python3.7 python3-pip
->>>>>>> 7d9d69791ae8de5058452dee220eb3184ccdde3a
   - pip3 install -r requirements.txt
   - pip3 install -e .
   - python3 tests/test_constructor.py
