@@ -1,8 +1,30 @@
 import numpy as np
 import pandas as pd
+from collections import namedtuple
 from typing import List, Tuple, Optional
 
 
+# Define Parameters type
+PARAMETERS_DEFAULTS = (
+    ("name", str),
+    ("scale", Tuple[float, float, float]),
+    ("offset", Optional[Tuple[float, float, float]]),
+    ("time", Optional[int]),
+    ("editPosition", Optional[Tuple[float, float, float]]),
+    ("editRotation", Optional[Tuple[float, float, float]]),
+    ("zoomLevel", Optional[float]),
+    ("taskBoundingBox", Optional[Tuple[int, int, int, int, int, int]]),
+    ("userBoundingBox", Optional[Tuple[int, int, int, int, int, int]]),
+)
+
+Parameters = namedtuple(
+    'Parameters',
+    [fields[0] for fields in list(PARAMETERS_DEFAULTS)],
+    defaults=[defaults[1] for defaults in list(PARAMETERS_DEFAULTS)]
+)
+
+
+# Define Nodes type
 class Nodes(pd.DataFrame):
     """The Nodes class facilitates a consistent tabular representation of skeleton nodes
 
@@ -14,26 +36,27 @@ class Nodes(pd.DataFrame):
         COLUMNS (tuple of tuple of str): Column names for multi index generation
 
     """
-    COLUMNS = (
-        ('id', ''),
-        ('position', 'x'),
-        ('position', 'y'),
-        ('position', 'z'),
-        ('radius', ''),
-        ('rotation', 'x'),
-        ('rotation', 'y'),
-        ('rotation', 'z'),
-        ('inVp', ''),
-        ('inMag', ''),
-        ('bitDepth', ''),
-        ('interpolation', ''),
-        ('time', ''),
-        ('comment', '')
-    )
+
+    NODES_DEFAULTS = {
+        ('id', ''): None,
+        ('position', 'x'): None,
+        ('position', 'y'): None,
+        ('position', 'z'): None,
+        ('radius', ''): 100.0,
+        ('rotation', 'x'): 0.0,
+        ('rotation', 'y'): 0.0,
+        ('rotation', 'z'): 0.0,
+        ('inVp', ''): 1,
+        ('inMag', ''): 1,
+        ('bitDepth', ''): 8,
+        ('interpolation', ''): True,
+        ('time', ''): 1.0,
+        ('comment', ''): ''
+    }
 
     def __init__(self, *args, **kwargs):
         assert ('columns' not in kwargs), "The columns of a Nodes object cannot be modified"
-        kwargs['columns'] = pd.MultiIndex.from_tuples(self.COLUMNS)
+        kwargs['columns'] = pd.MultiIndex.from_tuples(tuple(self.NODES_DEFAULTS.keys()))
         super(Nodes, self).__init__(*args, **kwargs)
 
     def append_from_list(self,
@@ -45,7 +68,7 @@ class Nodes(pd.DataFrame):
                          rotation_x: Optional[List[float]] = None,
                          rotation_y: Optional[List[float]] = None,
                          rotation_z: Optional[List[float]] = None,
-                         inVP: Optional[List[int]] = None,
+                         inVp: Optional[List[int]] = None,
                          inMag: Optional[List[int]] = None,
                          bitDepth: Optional[List[int]] = None,
                          interpolation: Optional[List[bool]] = None,
@@ -62,7 +85,7 @@ class Nodes(pd.DataFrame):
             rotation_x (optional): Node rotation x
             rotation_y (optional): Node rotation y
             rotation_z (optional): Node rotation z
-            inVP (optional): Viewport index in which node was placed
+            inVp (optional): Viewport index in which node was placed
             inMag (optional): (De-)Magnification factor in which node was placed
             bitDepth (optional): Bit (Color) Depth in which node was placed
             interpolation (optional): Interpolation state in which node was placed
@@ -73,6 +96,7 @@ class Nodes(pd.DataFrame):
             self: Nodes object
 
         """
+
         data = {
             ('id', ''): id,
             ('position', 'x'): position_x,
@@ -82,13 +106,17 @@ class Nodes(pd.DataFrame):
             ('rotation', 'x'): rotation_x,
             ('rotation', 'y'): rotation_y,
             ('rotation', 'z'): rotation_z,
-            ('inVp', ''): inVP,
+            ('inVp', ''): inVp,
             ('inMag', ''): inMag,
             ('bitDepth', ''): bitDepth,
             ('interpolation', ''): interpolation,
             ('time', ''): time,
             ('comment', ''): comment
         }
+
+        for key in data:
+            if data[key] is None:
+                data[key] = [self.NODES_DEFAULTS[key]] * len(id)
 
         nodes = Nodes(data=data)
         self = self.append(nodes)

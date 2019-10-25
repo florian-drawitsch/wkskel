@@ -1,4 +1,3 @@
-import numpy as np
 from wkskel import Skeleton
 
 # Construct skeleton object from nml file

@@ -1,0 +1,23 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="549d543a5f8faff68750f6b43e282e374e9bae70" />
+  <meta name="timestamp" content="1572011397078" />
+  <meta name="annotationId" content="5db2fb07010000e731d20b3a" />
+  <meta name="username" content="Florian Drawitsch" />
+  <parameters>
+    <experiment name="2017-01-12_FD0156-2" organization="Connectomics_Department" description="" />
+    <scale x="11.24" y="11.24" z="32.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1487095186549" />
+    <editPosition x="36720" y="38239" z="1824" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="1.5759572281292873" />
+  </parameters>
+  <thing id="3753" color.r="0.7254902124404907" color.g="0.5529412031173706" color.b="0.9647058844566345" color.a="1.0" name="explorative_2019-10-25_Florian_Drawitsch_3753">
+    <nodes />
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>

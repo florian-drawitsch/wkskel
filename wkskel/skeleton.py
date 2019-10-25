@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
@@ -5,9 +6,9 @@ from mpl_toolkits.mplot3d import Axes3D, art3d
 from typing import Union, Sequence, List, Tuple, Optional
 
 import wknml
-from .nodes import Nodes
 
-# TODO: Implement: Construct without nml, only with parameters provided
+from wkskel.types import Nodes, Parameters
+
 
 class Skeleton:
     """The Skeleton class facilitates scientific analysis and manipulation of webKnossos tracings.
@@ -21,37 +22,76 @@ class Skeleton:
     """
 
     DEFAULTS = {
-        'node_radius': 100,
-        'node_comment': ''
+        'node': {
+            'radius': 100,
+            'comment': ''
+        },
+        'tree': {
+            'color': (0.0, 0.0, 0.0, 1.0)
+        }
     }
 
-    def __init__(self, nml_source: str = None, **kwargs):
-        self.nodes = []
-        self.edges = []
-        self.names = []
-        self.colors = []
-        self.tree_ids = []
-        self.group_ids = []
-        self.groups = []
-        self.branchpoints = []
-        self.parameters = {}
+    def __init__(self, nml_path: str = None, parameters: Parameters = None):
+        """ The Skeleton constructor expects either a path to a nml file or a Parameters object as input arguments
+
+        Args:
+            nml_path: Path to nml file. If constructed via an nml file, the resulting skeleton object represents all of
+                the trees and all of the other properties stored in the file.
+            parameters (optional): Parameters (wkskel.types.Parameters) object specifying the most rudimentary
+                properties of the skeleton. If constructed via a Parameters object, the resulting skeleton will contain
+                one empty tree.
+
+        Examples:
+            Using nml_path:
+                nml_path = '/path/to/example.nml'
+                skel = Skeleton(nml_path)
+
+            Using parameters:
+                parameters = Skeleton.define_parameters(name="2017-01-12_FD0156-2", scale=(11.24, 11.24, 32))
+                skel = Skeleton(parameters=parameters)
+        """
+
+        assert (nml_path is not None) ^ (parameters is not None), \
+            'To construct a skeleton object, either a path to a nml file or a parameters dict needs to passed'
+
+        self.nodes = list()
+        self.edges = list()
+        self.names = list()
+        self.colors = list()
+        self.tree_ids = list()
+        self.group_ids = list()
+        self.groups = list()
+        self.branchpoints = list()
+        self.parameters = Parameters()
+        self.nml_path = str()
         self.defaults = self.DEFAULTS
 
-        if nml_source is not None:
+        # Construct from nml file
+        if nml_path is not None:
+            assert os.path.exists(nml_path), \
+                'not a valid path: {}'.format(nml_path)
             try:
-                with open(nml_source, "rb") as f:
+                with open(nml_path, "rb") as f:
                     nml = wknml.parse_nml(f)
-                    self._nml_to_skeleton(nml)
             except IOError:
-                print(nml_source + ' does not seem to exist or is not a valid nml file')
+                print('not a valid nml file: {}'.format(nml_path))
+
+            self._nml_to_skeleton(nml)
+
+        # Construct from parameters
+        else:
+            assert type(parameters) is Parameters, \
+                'provided parameters must be of type wkskel.types.Parameters'
+
+            self._parameters_to_skeleton(parameters)
 
     def add_tree(self,
                  nodes: Nodes = Nodes(),
-                 edges: np.ndarray = np.empty((0, 2), dtype=np.uint32),
+                 edges: Union[List[Tuple[int, int]], np.ndarray] = None,
                  tree_id: int = None,
                  group_id: int = None,
                  name: str = '',
-                 color: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)):
+                 color: Tuple[float, float, float, float] = None):
         """ Appends new tree to skeleton.
 
         Args:
@@ -63,8 +103,16 @@ class Skeleton:
             color (optional): Color to be used for new tree specified as (r, g, b, alpha). Default: (0, 0, 0, 1)
         """
 
+        if edges is None:
+            edges = np.empty((0, 2), dtype=np.uint32)
+        elif type(edges) is list:
+            edges = np.asarray(edges)
+
         if tree_id is None:
-            tree_id = max(self.tree_ids) + 1
+            tree_id = self.num_trees() + 1
+
+        if color is None:
+            color = self.defaults['tree']['color']
 
         self.nodes.append(nodes)
         self.edges.append(edges)
@@ -191,21 +239,21 @@ class Skeleton:
         # TODO
         pass
 
-    def make_nodes(self,
-                   position_x: List[int],
-                   position_y: List[int],
-                   position_z: List[int],
-                   id: List[int] = None,
-                   radius: Optional[List[int]] = None,
-                   rotation_x: Optional[List[float]] = None,
-                   rotation_y: Optional[List[float]] = None,
-                   rotation_z: Optional[List[float]] = None,
-                   inVP: Optional[List[int]] = None,
-                   inMag: Optional[List[int]] = None,
-                   bitDepth: Optional[List[int]] = None,
-                   interpolation: Optional[List[bool]] = None,
-                   time: Optional[List[int]] = None,
-                   comment: Optional[List[int]] = None) -> Nodes:
+    def define_nodes(self,
+                     position_x: List[int],
+                     position_y: List[int],
+                     position_z: List[int],
+                     id: List[int] = None,
+                     radius: Optional[List[int]] = None,
+                     rotation_x: Optional[List[float]] = None,
+                     rotation_y: Optional[List[float]] = None,
+                     rotation_z: Optional[List[float]] = None,
+                     inVP: Optional[List[int]] = None,
+                     inMag: Optional[List[int]] = None,
+                     bitDepth: Optional[List[int]] = None,
+                     interpolation: Optional[List[bool]] = None,
+                     time: Optional[List[int]] = None,
+                     comment: Optional[List[int]] = None) -> Nodes:
         """ Generates new nodes table from data.
 
         Args:
@@ -234,17 +282,17 @@ class Skeleton:
             id = list(range(id_max+1, id_max+len(position_x)+1))
 
         if radius is None:
-            radius = [self.defaults['node_radius'] for x in range(len(position_x))]
+            radius = [self.defaults['node']['radius'] for x in range(len(position_x))]
 
         if comment is None:
-            comment = [self.defaults['node_comment'] for x in range(len(position_x))]
+            comment = [self.defaults['node']['comment'] for x in range(len(position_x))]
 
         nodes = Nodes().append_from_list(id, position_x, position_y, position_z, radius, rotation_x, rotation_y,
                                          rotation_z, inVP, inMag, bitDepth, interpolation, time, comment)
 
         return nodes
 
-    def make_nodes_from_positions(self, positions: np.ndarray) -> Nodes:
+    def define_nodes_from_positions(self, positions: np.ndarray) -> Nodes:
         """ Generates new nodes table from positions only.
 
         Args:
@@ -472,6 +520,10 @@ class Skeleton:
             self.group_ids = [i + add_id if i is not None else i for i in self.group_ids]
             self.groups = [Skeleton._group_modify_id(group, id_modifier=lambda x: x + add_id) for group in self.groups]
 
+    def _parameters_to_skeleton(self, parameters):
+        self.add_tree()
+        self.parameters = parameters
+
     def _nml_to_skeleton(self, nml):
         """ Converts wknml to skeleton data structures."""
 
@@ -486,7 +538,7 @@ class Skeleton:
 
         self.groups = nml.groups
         self.branchpoints = nml.branchpoints
-        self.parameters = nml.parameters
+        self.parameters = Parameters(**nml.parameters._asdict())
 
     def _skeleton_to_nml(self):
         """ Converts skeleton to wknml data structures."""
@@ -505,12 +557,11 @@ class Skeleton:
             )
             trees.append(tree)
 
-        nml_comments = self._skeleton_to_nml_comments()
         nml = wknml.NML(
-            parameters=self.parameters,
+            parameters=wknml.NMLParameters(**self.parameters._asdict()),
             trees=trees,
             branchpoints=self.branchpoints,
-            comments=nml_comments,
+            comments=self._skeleton_to_nml_comments(),
             groups=self.groups
         )
 
@@ -531,8 +582,35 @@ class Skeleton:
 
         return nml_comments
 
+    # Static Methods
+    @staticmethod
+    def define_parameters(
+            name: str,
+            scale: Tuple[float, float, float],
+            offset: Tuple[float, float, float] = (0, 0, 0),
+            time: int = 0,
+            editPosition: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+            editRotation: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+            zoomLevel: float = 1.0,
+            taskBoundingBox: Tuple[int, int, int, int, int, int] = None,
+            userBoundingBox: Tuple[int, int, int, int, int, int] = None) -> Parameters:
+
+        parameters = Parameters(
+            name=name,
+            scale=scale,
+            offset=offset,
+            time=time,
+            editPosition=editPosition,
+            editRotation=editRotation,
+            zoomLevel=zoomLevel,
+            taskBoundingBox=taskBoundingBox,
+            userBoundingBox=userBoundingBox
+        )
+
+        return parameters
+
     # Static Private Methods
-    @ staticmethod
+    @staticmethod
     def _nml_nodes_to_nodes(nml_nodes, nml_comments):
         """ Converts wknml nodes (list of named tuples) to skeleton nodes (DataFrame subclass)."""
 
@@ -552,7 +630,7 @@ class Skeleton:
 
         return nodes
 
-    @ staticmethod
+    @staticmethod
     def _nodes_to_nml_nodes(nodes):
         """ Converts skeleton nodes (DataFrame subclass) to wknml nodes (list of named tuples)."""
 
@@ -573,7 +651,7 @@ class Skeleton:
 
         return nml_nodes
 
-    @ staticmethod
+    @staticmethod
     def _edges_to_nml_edges(edges):
         """ Converts skeleton edges (numpy array) to wknml edges (list of named tuples)."""
 
@@ -630,20 +708,4 @@ class Skeleton:
         group = group._replace(children=list(map(lambda g: Skeleton._group_modify_id(g, id_modifier), group.children)))
 
         return group
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
