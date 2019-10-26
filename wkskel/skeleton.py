@@ -111,7 +111,7 @@ class Skeleton:
         if tree_id is None:
             tree_id = self.num_trees() + 1
 
-        if group_id not in self.group_ids:
+        if (self.num_trees() > 1) & (group_id not in self.group_ids):
             self.add_group(id=group_id)
 
         if color is None:
