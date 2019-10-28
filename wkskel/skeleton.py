@@ -109,9 +109,9 @@ class Skeleton:
             edges = np.asarray(edges)
 
         if tree_id is None:
-            tree_id = self.num_trees() + 1
+            tree_id = self.max_tree_id() + 1
 
-        if (group_id is not None) & (group_id not in self.group_ids):
+        if (group_id is not None) & (group_id not in self.groups_ids()):
             self.add_group(id=group_id)
 
         if color is None:
@@ -138,7 +138,7 @@ class Skeleton:
             name (optional): Target name for the added tree
         """
 
-        if group_id not in self.group_ids:
+        if group_id not in self.groups_ids():
             self.add_group(id=group_id)
 
         if name is None:
@@ -259,7 +259,7 @@ class Skeleton:
         if id is None:
             id = int(np.nanmax(np.asarray(self.group_ids, dtype=np.float)) + 1)
         else:
-            assert (id not in self.group_ids), ('Id already exists')
+            assert (id not in self.groups_ids()), ('Id already exists')
 
         if name is None:
             name = 'Group {}'.format(id)
@@ -508,17 +508,24 @@ class Skeleton:
     def min_tree_id(self) -> int:
         """ Returns lowest global tree id."""
 
-        return min(self.tree_ids)
+        return min(self.tree_ids) if len(self.tree_ids)>0 else 0
 
     def max_tree_id(self) -> int:
         """ Returns highest global tree id."""
 
-        return max(self.tree_ids)
+        return max(self.tree_ids) if len(self.tree_ids)>0 else 0
 
     def num_trees(self) -> int:
         """Returns number of trees contained in skeleton object."""
 
         return len(self.nodes)
+
+    def groups_ids(self) -> List[int]:
+        """ Returns all ids defined in groups tree"""
+
+        _, groups_ids = Skeleton._group_get_ids(self.groups)
+
+        return groups_ids
 
     # Private Methods
     def _reset_node_ids(self, start_id: int):
@@ -744,4 +751,13 @@ class Skeleton:
         group = group._replace(children=list(map(lambda g: Skeleton._group_modify_id(g, id_modifier), group.children)))
 
         return group
+
+    @staticmethod
+    def _group_get_ids(groups, ids = []):
+
+        for group in groups:
+            ids.append(group.id)
+            Skeleton._group_get_ids(group.children, ids)
+
+        return groups, ids
 
