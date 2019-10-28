@@ -138,3 +138,4 @@ class Nodes(pd.DataFrame):
         self = self.append_from_list(*list(data.T))
 
         return self
+

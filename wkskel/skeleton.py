@@ -111,7 +111,7 @@ class Skeleton:
         if tree_id is None:
             tree_id = self.num_trees() + 1
 
-        if (self.num_trees() > 1) & (group_id not in self.group_ids):
+        if (group_id is not None) & (group_id not in self.group_ids):
             self.add_group(id=group_id)
 
         if color is None:
@@ -127,17 +127,22 @@ class Skeleton:
     def add_tree_from_skel(self,
                            skel: 'Skeleton',
                            tree_idx: int,
-                           group_id: int = None):
+                           group_id: int = None,
+                           name: str = None):
         """ Appends a specific tree contained in a different skeleton object to the skeleton.
 
         Args:
             skel: Source skeleton object (different from the one calling this method) to be added
             tree_idx: Source tree index of tree to be added
             group_id (optional): Target group id to which the added tree should be assigned. Default: None
+            name (optional): Target name for the added tree
         """
 
         if group_id not in self.group_ids:
             self.add_group(id=group_id)
+
+        if name is None:
+            name = skel.names[tree_idx]
 
         skel._reset_node_ids(self.max_node_id() + 1)
         skel._reset_tree_ids(self.max_tree_id() + 1)
@@ -146,7 +151,7 @@ class Skeleton:
         self.edges = self.edges + [skel.edges[tree_idx]]
         self.tree_ids = self.tree_ids + [skel.tree_ids[tree_idx]]
         self.group_ids = self.group_ids + [group_id]
-        self.names = self.names + [skel.names[tree_idx]]
+        self.names = self.names + [name]
         self.colors = self.colors + [skel.colors[tree_idx]]
 
         return self

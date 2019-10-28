@@ -52,8 +52,19 @@ def add_trees_from_skel():
     skel.write_nml('testdata/03_02_merged_gen.nml')
 
 
+def add_nodes_as_trees():
+
+    # Test merging skeleton with multiple trees from nodes
+    skel = Skeleton('testdata/01_ref.nml')
+    nodes = skel.define_nodes([40000, 40100, 40200], [45000, 45100, 45200], [1000, 1100, 1200], [1, 2, 3])
+    skel.add_nodes_as_trees(nodes)
+    skel.write_nml('testdata/01_NT_merged_gen.nml')
+
+
 if __name__ == '__main__':
     add_tree_from_skel()
     add_trees_from_skel()
+    add_nodes_as_trees()
+
 
 
