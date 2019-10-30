@@ -108,6 +108,10 @@ class Skeleton:
         elif type(edges) is list:
             edges = np.asarray(edges)
 
+        if len(nodes) > 1:
+            assert Skeleton._num_conn_comp(Skeleton._get_graph(nodes, edges)) == 1, \
+                'Added tree consists of more than one connected component'
+
         if tree_id is None:
             tree_id = self.max_tree_id() + 1
 
@@ -384,8 +388,9 @@ class Skeleton:
 
         """
 
-        edge_list = self.edges[tree_idx].tolist()
-        graph = nx.Graph(edge_list)
+        nodes = self.nodes[tree_idx]
+        edges = self.edges[tree_idx]
+        graph = Skeleton._get_graph(nodes, edges)
 
         return graph
 
@@ -464,6 +469,10 @@ class Skeleton:
             nml_write_path: Path to which .nml file should be written
 
         """
+
+        # If the object does not have any trees, construct an empty tree before writing to enable webKnossos import
+        if self.num_trees() == 0:
+            self.add_tree()
 
         nml = self._skeleton_to_nml()
         with open(nml_write_path, "wb") as f:
@@ -579,24 +588,25 @@ class Skeleton:
             self.groups = [Skeleton._group_modify_id(group, id_modifier=lambda x: x + add_id) for group in self.groups]
 
     def _parameters_to_skeleton(self, parameters):
-        self.add_tree()
+        """ Generates bare skeleton object from parameters."""
+
         self.parameters = parameters
 
     def _nml_to_skeleton(self, nml):
         """ Converts wknml to skeleton data structures."""
 
-        for tree in nml.trees:
-            nodes = Skeleton._nml_nodes_to_nodes(nml_nodes=tree.nodes, nml_comments=nml.comments)
-            self.nodes.append(nodes)
-            self.edges.append(np.array([(edge.source, edge.target) for edge in tree.edges]))
-            self.names.append(tree.name)
-            self.colors.append(tree.color)
-            self.tree_ids.append(tree.id)
-            self.group_ids.append(tree.groupId)
-
         self.groups = nml.groups
         self.branchpoints = nml.branchpoints
         self.parameters = Parameters(**nml.parameters._asdict())
+
+        for tree in nml.trees:
+            self.add_tree(
+                nodes=Skeleton._nml_nodes_to_nodes(nml_nodes=tree.nodes, nml_comments=nml.comments),
+                edges=np.array([(edge.source, edge.target) for edge in tree.edges]),
+                group_id=tree.groupId,
+                name=tree.name,
+                color=tree.color
+            )
 
     def _skeleton_to_nml(self):
         """ Converts skeleton to wknml data structures."""
@@ -776,3 +786,20 @@ class Skeleton:
 
         return groups, ids
 
+    @staticmethod
+    def _get_graph(nodes: Nodes, edges: np.ndarray):
+        """ Returns the networkx graph representation of provided nodes and edges."""
+
+        graph = nx.Graph()
+        graph.add_nodes_from(nodes['id'])
+        attrs = nodes.set_index('id').to_dict('index')
+        nx.set_node_attributes(graph, attrs)
+        graph.add_edges_from(edges)
+
+        return graph
+
+    @staticmethod
+    def _num_conn_comp(graph):
+        """ Returns number of connected components for graph"""
+
+        return nx.number_connected_components(graph)

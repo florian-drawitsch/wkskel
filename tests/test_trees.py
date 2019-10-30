@@ -61,10 +61,18 @@ def add_nodes_as_trees():
     skel.write_nml('testdata/01_NT_merged_gen.nml')
 
 
+def detect_multiple_conn_comp():
+
+    # Test fixing of trees with multiple connected components
+    # skel = Skeleton('testdata/CC_err.nml')
+    pass
+
+
 if __name__ == '__main__':
     add_tree_from_skel()
     add_trees_from_skel()
     add_nodes_as_trees()
+    detect_multiple_conn_comp()
 
 
 
