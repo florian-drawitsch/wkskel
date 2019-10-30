@@ -257,8 +257,8 @@ class Skeleton:
             name: Name of added group
 
         """
-
-        assert (parent_id in self.group_ids), ('Parent id does not exist')
+        if parent_id is not None:
+            assert (parent_id in self.group_ids), ('Parent id does not exist')
 
         if id is None:
             id = int(np.nanmax(np.asarray(self.group_ids, dtype=np.float)) + 1)
@@ -522,12 +522,22 @@ class Skeleton:
     def min_node_id(self) -> int:
         """ Returns lowest global node id."""
 
-        return min([min(nodes.id) if len(nodes)>0 else 0 for nodes in self.nodes])
+        if len(self.nodes) > 0:
+            min_node_id = min([min(nodes.id) if len(nodes) > 0 else 0 for nodes in self.nodes])
+        else:
+            min_node_id = 0
+
+        return min_node_id
 
     def max_node_id(self) -> int:
         """ Returns highest global node id."""
 
-        return max([max(nodes.id) if len(nodes)>0 else 0 for nodes in self.nodes])
+        if len(self.nodes) > 0:
+            max_node_id = max([max(nodes.id) if len(nodes) > 0 else 0 for nodes in self.nodes])
+        else:
+            max_node_id = 0
+
+        return max_node_id
 
     def min_tree_id(self) -> int:
         """ Returns lowest global tree id."""
