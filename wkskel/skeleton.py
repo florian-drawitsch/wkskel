@@ -373,8 +373,24 @@ class Skeleton:
 
         return distances
 
+    def get_graph(self, tree_idx):
+        """ Returns the networkx graph representation of a tree.
+
+        Args:
+            tree_idx: Linear index of the tree to be returned as graph object
+
+        Returns:
+            graph: Graph object
+
+        """
+
+        edge_list = self.edges[tree_idx].tolist()
+        graph = nx.Graph(edge_list)
+
+        return graph
+
     def get_shortest_path(self, node_id_start: int, node_id_end: int) -> List[int]:
-        """ Gets the shortest path between two nodes of a tree.
+        """ Returns the shortest path between two nodes of a tree.
 
         Args:
             node_id_start: Node id of start node
@@ -385,14 +401,13 @@ class Skeleton:
 
         """
 
-        _, skel_idx_start = self.node_id_to_idx(node_id_start)
-        _, skel_idx_end = self.node_id_to_idx(node_id_end)
+        _, tree_idx_start = self.node_id_to_idx(node_id_start)
+        _, tree_idx_end = self.node_id_to_idx(node_id_end)
 
-        assert skel_idx_start == skel_idx_end, 'Provided node ids need to be part of the same tree'
+        assert tree_idx_start == tree_idx_end, 'Provided node ids need to be part of the same tree'
 
-        edge_list = self.edges[skel_idx_start].tolist()
-        g = nx.Graph(edge_list)
-        shortest_path = nx.shortest_path(g, node_id_start, node_id_end)
+        graph = self.get_graph(tree_idx_start)
+        shortest_path = nx.shortest_path(graph, node_id_start, node_id_end)
 
         return shortest_path
 
