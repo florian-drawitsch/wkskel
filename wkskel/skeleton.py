@@ -348,20 +348,35 @@ class Skeleton:
 
         return nodes
 
-    def get_distance_to_nodes(self,
-                              position: Union[Sequence[int], np.ndarray],
+    def get_distances_to_node(self,
+                              positions: Union[Sequence[Tuple[int, int, int]], np.ndarray],
+                              node_id: int = None,
+                              tree_idx: int = None,
+                              node_idx: int = None,
                               unit: str = 'um') -> List[np.ndarray]:
-        """ Get the distance of nodes on one, multiple or all trees to specified position.
+        """ Get the (euclidean) distances from the specified node to the provided (x,y,z) positions
 
         Args:
-            position: position specifying x, y, z coordinates (voxels) to which the node distances should be computed
+            positions (N x 3): Target (x,y,z) positions to which the distances should be computed
+            node_id: Node id of the node for which the distances should be computed
+            tree_idx: Tree idx of the node for which the distances should be computed
+            node_idx: Node idx of the node for which the distances should be computed
             unit (optional): Unit flag specifying in which unit the distances should be returned.
                 Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer). Default: 'um' (micrometer)
 
         Returns:
-            distances: List of arrays holding distances
+            distances: Array holding distances
 
         """
+
+        assert (node_id is not None) ^ ((tree_idx is not None) & (node_idx is not None)), \
+            'Either provide node_id or both tree_idx and node_idx'
+
+        if type(positions) is not np.ndarray:
+            positions = np.array(positions)
+
+        if node_id is not None:
+            node_idx, tree_idx = self.node_id_to_idx(node_id)
 
         unit_factors = {
             'vx': np.array((1, 1, 1)),
@@ -371,9 +386,39 @@ class Skeleton:
         assert unit in unit_factors.keys(), 'Invalid unit'
         unit_factor = unit_factors[unit]
 
-        distances = []
-        for nodes in self.nodes:
-            distances.append(np.sqrt(np.sum(((nodes.position.values - position) * unit_factor.reshape(1, 3))**2, axis=1)))
+        distances = Skeleton.get_distance(positions, np.array(self.nodes[tree_idx].position.values[node_idx]), unit_factor)
+
+        return distances
+
+    def get_distance_to_nodes(self,
+                              position: Union[Tuple[int, int, int], np.ndarray],
+                              tree_idx: int,
+                              unit: str = 'um') -> List[np.ndarray]:
+        """ Get the (euclidean) distances from the nodes of the specified tree to the provided (x,y,z) position
+
+        Args:
+            position (1 x 3): Target (x,y,z) position to which the node distances should be computed
+            tree_idx: Tree idx for which node distances should be computed
+            unit (optional): Unit flag specifying in which unit the distances should be returned.
+                Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer). Default: 'um' (micrometer)
+
+        Returns:
+            distances: Array holding distances
+
+        """
+
+        if type(position) is not np.ndarray:
+            position = np.array(position)
+
+        unit_factors = {
+            'vx': np.array((1, 1, 1)),
+            'nm': np.array(self.parameters.scale),
+            'um': np.array(self.parameters.scale)/1000
+        }
+        assert unit in unit_factors.keys(), 'Invalid unit'
+        unit_factor = unit_factors[unit]
+
+        distances = Skeleton.get_distance(np.array(self.nodes[tree_idx].position.values), position, unit_factor)
 
         return distances
 
@@ -482,11 +527,15 @@ class Skeleton:
     def node_id_to_idx(self, node_id: int) -> (int, int):
         """ Returns the linear tree and node indices for the provided node id."""
 
+        node_idx = None
         for tree_idx, nodes in enumerate(self.nodes):
             index_list = nodes[nodes['id'] == node_id].index.tolist()
             if index_list:
                 node_idx = index_list[0]
                 break
+
+        assert (node_idx is not None), \
+            'node id {} does not exist'.format(node_id)
 
         return node_idx, tree_idx
 
@@ -687,6 +736,28 @@ class Skeleton:
 
         return parameters
 
+    # Static Methods
+    @staticmethod
+    def get_distance(positions: np.ndarray, position: np.ndarray, unit_factor: np.ndarray = None):
+        """ Get the (euclidean) distances between positions and a target position
+
+        Args:
+            positions (N x 3): Array holding (multiple) x, y, z positions
+            position (1 x 3): Array holding x, y, z position to which the distances should be computed
+            unit_factors (1 x 3 Array, optional): Conversion factors with which distances are multiplied. Default (1,1,1)
+
+        Returns:
+            distances: Arrays holding distances
+
+        """
+
+        if unit_factor is None:
+            unit_factor = np.array([1, 1, 1])
+
+        distances = np.sqrt(np.sum(((positions - position) * unit_factor.reshape(1, 3)) ** 2, axis=1))
+
+        return distances
+
     # Static Private Methods
     @staticmethod
     def _nml_nodes_to_nodes(nml_nodes, nml_comments):
@@ -813,3 +884,5 @@ class Skeleton:
         """ Returns number of connected components for graph"""
 
         return nx.number_connected_components(graph)
+
+
