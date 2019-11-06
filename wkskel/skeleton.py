@@ -334,17 +334,20 @@ class Skeleton:
         return nodes
 
     def define_nodes_from_positions(self, positions: np.ndarray) -> Nodes:
-        """ Generates new nodes table from positions only.
+        """ Generates new nodes table from positions only (node ids are generated automatically).
 
         Args:
-            positions: Numpy array holding the x y z positions to be returned as nodes in a Nodes table
+            positions (N x 3): Numpy array holding the (x,y,z) positions to be returned as nodes in a Nodes table
 
         Returns:
             nodes: Nodes object
 
         """
 
-        nodes = Nodes().append_from_numpy(positions)
+        id_max = self.max_node_id()
+        id = np.array(range(id_max + 1, id_max + positions.shape[0] + 1)).reshape(-1, 1)
+
+        nodes = Nodes().append_from_numpy(np.append(id, positions, axis=1))
 
         return nodes
 
@@ -763,11 +766,11 @@ class Skeleton:
     def _nml_nodes_to_nodes(nml_nodes, nml_comments):
         """ Converts wknml nodes (list of named tuples) to skeleton nodes (DataFrame subclass)."""
 
-        data = [(node.id, node.position[0], node.position[1], node.position[2], node.radius, node.rotation[0],
+        data = np.array([(node.id, node.position[0], node.position[1], node.position[2], node.radius, node.rotation[0],
                  node.rotation[1], node.rotation[2], node.inVp, node.inMag, node.bitDepth, node.interpolation,
-                 node.time, np.nan) for node in nml_nodes]
+                 node.time, np.nan) for node in nml_nodes])
 
-        nodes = Nodes(data=data)
+        nodes = Nodes().append_from_numpy(data)
 
         # Add comments to nodes table
         comment_node_ids = [comment.node for comment in nml_comments]

@@ -50,8 +50,25 @@ class Nodes(pd.DataFrame):
         ('inMag', ''): 1,
         ('bitDepth', ''): 8,
         ('interpolation', ''): True,
-        ('time', ''): 1.0,
-        ('comment', ''): ''
+        ('time', ''):  0,
+        ('comment', ''): np.nan
+    }
+
+    NODES_TYPES = {
+        ('id', ''): 'int32',
+        ('position', 'x'): 'int32',
+        ('position', 'y'): 'int32',
+        ('position', 'z'): 'int32',
+        ('radius', ''): 'float32',
+        ('rotation', 'x'): 'float32',
+        ('rotation', 'y'): 'float32',
+        ('rotation', 'z'): 'float32',
+        ('inVp', ''): 'int8',
+        ('inMag', ''): 'int8',
+        ('bitDepth', ''): 'int8',
+        ('interpolation', ''): 'bool',
+        ('time', ''):  'int64',
+        ('comment', ''): 'object'
     }
 
     def __init__(self, *args, **kwargs):
@@ -64,7 +81,7 @@ class Nodes(pd.DataFrame):
                          position_x: List[int],
                          position_y: List[int],
                          position_z: List[int],
-                         radius: Optional[List[int]] = None,
+                         radius: Optional[List[float]] = None,
                          rotation_x: Optional[List[float]] = None,
                          rotation_y: Optional[List[float]] = None,
                          rotation_z: Optional[List[float]] = None,
@@ -73,7 +90,7 @@ class Nodes(pd.DataFrame):
                          bitDepth: Optional[List[int]] = None,
                          interpolation: Optional[List[bool]] = None,
                          time: Optional[List[int]] = None,
-                         comment: Optional[List[int]] = None):
+                         comment: Optional[List[str]] = None):
         """ Appends data to Nodes object
 
         Args:
@@ -118,7 +135,7 @@ class Nodes(pd.DataFrame):
             if data[key] is None:
                 data[key] = [self.NODES_DEFAULTS[key]] * len(id)
 
-        nodes = Nodes(data=data)
+        nodes = Nodes(data=data).astype(dtype=self.NODES_TYPES)
         self = self.append(nodes)
 
         return self
@@ -138,4 +155,6 @@ class Nodes(pd.DataFrame):
         self = self.append_from_list(*list(data.T))
 
         return self
+
+
 
