@@ -766,11 +766,11 @@ class Skeleton:
     def _nml_nodes_to_nodes(nml_nodes, nml_comments):
         """ Converts wknml nodes (list of named tuples) to skeleton nodes (DataFrame subclass)."""
 
-        data = np.array([(node.id, node.position[0], node.position[1], node.position[2], node.radius, node.rotation[0],
+        data = [(node.id, node.position[0], node.position[1], node.position[2], node.radius, node.rotation[0],
                  node.rotation[1], node.rotation[2], node.inVp, node.inMag, node.bitDepth, node.interpolation,
-                 node.time, np.nan) for node in nml_nodes])
+                 node.time, np.nan) for node in nml_nodes]
 
-        nodes = Nodes().append_from_numpy(data)
+        nodes = Nodes(data=data)
 
         # Add comments to nodes table
         comment_node_ids = [comment.node for comment in nml_comments]

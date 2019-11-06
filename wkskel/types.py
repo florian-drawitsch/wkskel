@@ -75,6 +75,7 @@ class Nodes(pd.DataFrame):
         assert ('columns' not in kwargs), "The columns of a Nodes object cannot be modified"
         kwargs['columns'] = pd.MultiIndex.from_tuples(tuple(self.NODES_DEFAULTS.keys()))
         super(Nodes, self).__init__(*args, **kwargs)
+        self.astype(self.NODES_TYPES)
 
     def append_from_list(self,
                          id: List[int],
@@ -135,7 +136,7 @@ class Nodes(pd.DataFrame):
             if data[key] is None:
                 data[key] = [self.NODES_DEFAULTS[key]] * len(id)
 
-        nodes = Nodes(data=data).astype(dtype=self.NODES_TYPES)
+        nodes = Nodes(data=data)
         self = self.append(nodes)
 
         return self
