@@ -2,7 +2,7 @@ import os
 import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D, art3d
+from mpl_toolkits import mplot3d
 from typing import Union, Sequence, List, Tuple, Optional
 
 import wknml
@@ -485,12 +485,14 @@ class Skeleton:
             tree_inds = list(range(len(self.nodes)))
 
         if colors is None:
-            cm = plt.get_cmap('Dark2', len(self.nodes))
-            colors = cm.colors
+            colors = self.colors
 
         if ax is None:
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
+
+        lim_min = np.empty((0, 3))
+        lim_max = np.empty((0, 3))
 
         for tree_idx in tree_inds:
 
@@ -500,13 +502,25 @@ class Skeleton:
             if um_scale:
                 nodes['position'] = nodes['position'].multiply(self.parameters.scale).divide(1000)
 
+            lim_min = np.min(np.append(nodes['position'].values, lim_min, axis=0), axis=0).reshape(1, 3)
+            lim_max = np.max(np.append(nodes['position'].values, lim_max, axis=0), axis=0).reshape(1, 3)
+
+            segments = []
             for edge in edges:
                 n0 = nodes['position'][nodes.id == edge[0]].values[0]
                 n1 = nodes['position'][nodes.id == edge[1]].values[0]
-                ax.plot([n0[0], n1[0]],
-                        [n0[1], n1[1]],
-                        [n0[2], n1[2]],
-                        color=colors[tree_idx])
+                segment = ((n0[0], n0[1], n0[2]), (n1[0], n1[1], n1[2]))
+                segments.append(segment)
+
+            line_collection = mplot3d.art3d.Line3DCollection(segments=segments, colors=colors[tree_idx])
+            ax.add_collection3d(line_collection)
+
+        if (lim_min.size != 0) & (lim_max.size != 0):
+            ax.set_xlim(lim_min[0, 0], lim_max[0, 0])
+            ax.set_ylim(lim_min[0, 1], lim_max[0, 1])
+            ax.set_zlim(lim_min[0, 2], lim_max[0, 2])
+
+        plt.show()
 
         return ax
 
