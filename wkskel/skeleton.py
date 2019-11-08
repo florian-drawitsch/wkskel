@@ -32,15 +32,16 @@ class Skeleton:
         }
     }
 
-    def __init__(self, nml_path: str = None, parameters: Parameters = None):
+    def __init__(self, nml_path: str = None, parameters: Parameters = None, strict = True):
         """ The Skeleton constructor expects either a path to a nml file or a Parameters object as input arguments
 
         Args:
             nml_path: Path to nml file. If constructed via an nml file, the resulting skeleton object represents all of
                 the trees and all of the other properties stored in the file.
-            parameters (optional): Parameters (wkskel.types.Parameters) object specifying the most rudimentary
-                properties of the skeleton. If constructed via a Parameters object, the resulting skeleton will contain
-                one empty tree.
+            parameters (optional): Parameters (wkskel.types.Parameters) specifying the most rudimentary properties
+                 of the skeleton.
+            strict (optional): Controls assertions ensuring that resulting skeleton objects are compatible with
+                webKnossos. Default: True
 
         Examples:
             Using nml_path:
@@ -53,7 +54,7 @@ class Skeleton:
         """
 
         assert (nml_path is not None) ^ (parameters is not None), \
-            'To construct a skeleton object, either a path to a nml file or a parameters dict needs to passed'
+            'To construct a skeleton object, either a path to a nml file or the skeleton parameters need to passed'
 
         self.nodes = list()
         self.edges = list()
@@ -65,6 +66,8 @@ class Skeleton:
         self.branchpoints = list()
         self.parameters = Parameters()
         self.nml_path = str()
+
+        self.strict = strict
         self.defaults = self.DEFAULTS
 
         # Construct from nml file
@@ -109,7 +112,7 @@ class Skeleton:
         elif type(edges) is list:
             edges = np.asarray(edges)
 
-        if len(nodes) > 1:
+        if self.strict & (len(nodes) > 1):
             assert Skeleton._num_conn_comp(Skeleton._get_graph(nodes, edges)) == 1, \
                 'Added tree consists of more than one connected component'
 
@@ -454,9 +457,10 @@ class Skeleton:
     def plot(self,
              tree_inds: Union[int, List[int]] = None,
              view: str = None,
-             colors: List[Tuple[float, float, float, float]] = None,
+             colors: Union[Tuple[float, float, float, float], List[Tuple[float, float, float, float]]] = None,
              unit: str = 'um',
-             ax: Optional[plt.axes] = None):
+             show: bool = True,
+             ax: plt.axes = None):
         """ Generates a (3D) line plot of the trees contained in the skeleton object.
 
         Args:
@@ -465,11 +469,14 @@ class Skeleton:
             view (optional): Plot as 2D projection on orthonormal plane.
                 Options: 'xy', 'xz', 'yz'
                 Default: Plot as 3D projection
-            colors (optional): Colors in which trees should be plotted.
+            colors (optional): Colors in which trees should be plotted. If only one RGBA tuple is specified, it is
+                broadcasted over all trees. Alternatively, a list providing RGBA tuples for each tree can be passed.
                 Default: Skeleton colors (self.colors) are used
             unit (optional): Specifies in which unit the plot should be generated.
                 Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer).
                 Default: 'um' (micrometer)
+            show (optional): Displays the plot in an interactive window. For repeatedly plotting on the same axes, set
+                to False. Default: True
             ax: Axes to be plotted on.
 
         Returns:
@@ -483,6 +490,8 @@ class Skeleton:
 
         if colors is None:
             colors = self.colors
+        elif type(colors[0]) is not Sequence:
+            colors = [colors] * self.num_trees()
 
         unit_factor = self._get_unit_factor(unit)
 
@@ -545,7 +554,8 @@ class Skeleton:
         else:
             ax.set_aspect('equal')
 
-        plt.show()
+        if show:
+            plt.show()
 
         return ax
 
