@@ -2,7 +2,8 @@ import os
 import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
-from mpl_toolkits import mplot3d
+from matplotlib.collections import LineCollection
+from mpl_toolkits.mplot3d import Axes3D, art3d
 from typing import Union, Sequence, List, Tuple, Optional
 
 import wknml
@@ -381,14 +382,7 @@ class Skeleton:
         if node_id is not None:
             node_idx, tree_idx = self.node_id_to_idx(node_id)
 
-        unit_factors = {
-            'vx': np.array((1, 1, 1)),
-            'nm': np.array(self.parameters.scale),
-            'um': np.array(self.parameters.scale)/1000
-        }
-        assert unit in unit_factors.keys(), 'Invalid unit'
-        unit_factor = unit_factors[unit]
-
+        unit_factor = self._get_unit_factor(unit)
         distances = Skeleton.get_distance(positions, np.array(self.nodes[tree_idx].position.values[node_idx]), unit_factor)
 
         return distances
@@ -413,14 +407,7 @@ class Skeleton:
         if type(position) is not np.ndarray:
             position = np.array(position)
 
-        unit_factors = {
-            'vx': np.array((1, 1, 1)),
-            'nm': np.array(self.parameters.scale),
-            'um': np.array(self.parameters.scale)/1000
-        }
-        assert unit in unit_factors.keys(), 'Invalid unit'
-        unit_factor = unit_factors[unit]
-
+        unit_factor = self._get_unit_factor(unit)
         distances = Skeleton.get_distance(np.array(self.nodes[tree_idx].position.values), position, unit_factor)
 
         return distances
@@ -465,60 +452,98 @@ class Skeleton:
         return shortest_path
 
     def plot(self,
-             tree_inds: Optional[List[int]] = None,
-             colors: Optional[List[Tuple[float, float, float, float]]] = None,
-             um_scale: bool = True,
+             tree_inds: Union[int, List[int]] = None,
+             view: str = None,
+             colors: List[Tuple[float, float, float, float]] = None,
+             unit: str = 'um',
              ax: Optional[plt.axes] = None):
         """ Generates a (3D) line plot of the trees contained in the skeleton object.
 
         Args:
-            tree_inds: Tree indices to be plotted
-            colors: Colors in which trees should be plotted
-            um_scale: Plot on micrometer scale instead of voxel scale
+            tree_inds (optional): Tree indices to be plotted.
+                Default: All trees are plotted
+            view (optional): Plot as 2D projection on orthonormal plane.
+                Options: 'xy', 'xz', 'yz'
+                Default: Plot as 3D projection
+            colors (optional): Colors in which trees should be plotted.
+                Default: Skeleton colors (self.colors) are used
+            unit (optional): Specifies in which unit the plot should be generated.
+                Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer).
+                Default: 'um' (micrometer)
             ax: Axes to be plotted on.
 
         Returns:
-            ax: Plot axes.
+            ax: Axes which was plotted on
         """
 
         if tree_inds is None:
             tree_inds = list(range(len(self.nodes)))
+        elif tree_inds is int:
+            tree_inds = [tree_inds]
 
         if colors is None:
             colors = self.colors
 
+        unit_factor = self._get_unit_factor(unit)
+
+        allowed_views = ['xy', 'xz', 'yz']
+        if view is not None:
+            assert (view in allowed_views), \
+                'The passed view argument: {} is not among the allowed views: {}'.format(view, allowed_views)
+
         if ax is None:
             fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+            if view is None:
+                ax = fig.add_subplot(111, projection='3d')
+            else:
+                ax = fig.add_subplot(111, projection='rectilinear')
+        else:
+            if view is None:
+                assert (ax.name == '3d'), \
+                    'To generate a 3D skeleton plot, the projection type of the passed axes must be 3D'
+            else:
+                assert (ax.name != '3d'), \
+                    'To generate a 2D skeleton plot, the projection type of the passed axes must be rectilinear'
 
-        lim_min = np.empty((0, 3))
-        lim_max = np.empty((0, 3))
-
+        lims_min = []
+        lims_max = []
         for tree_idx in tree_inds:
 
-            nodes = self.nodes[tree_idx]
             edges = self.edges[tree_idx]
-
-            if um_scale:
-                nodes['position'] = nodes['position'].multiply(self.parameters.scale).divide(1000)
-
-            lim_min = np.min(np.append(nodes['position'].values, lim_min, axis=0), axis=0).reshape(1, 3)
-            lim_max = np.max(np.append(nodes['position'].values, lim_max, axis=0), axis=0).reshape(1, 3)
+            nodes = self.nodes[tree_idx]
+            nodes['position'] = nodes['position'].multiply(unit_factor)
+            if view is 'xy':
+                nodes = nodes.drop([('position', 'z')], axis=1)
+            elif view is 'xz':
+                nodes = nodes.drop([('position', 'y')], axis=1)
+            elif view is 'yz':
+                nodes = nodes.drop([('position', 'x')], axis=1)
+            lims_min.append(np.min(nodes['position'].values, axis=0))
+            lims_max.append(np.max(nodes['position'].values, axis=0))
 
             segments = []
             for edge in edges:
                 n0 = nodes['position'][nodes.id == edge[0]].values[0]
                 n1 = nodes['position'][nodes.id == edge[1]].values[0]
-                segment = ((n0[0], n0[1], n0[2]), (n1[0], n1[1], n1[2]))
+                segment = [[c for c in n0], [c for c in n1]]
                 segments.append(segment)
 
-            line_collection = mplot3d.art3d.Line3DCollection(segments=segments, colors=colors[tree_idx])
-            ax.add_collection3d(line_collection)
+            if view is None:
+                line_collection = art3d.Line3DCollection(segments=segments, colors=colors[tree_idx])
+                ax.add_collection3d(line_collection)
+            else:
+                line_collection = LineCollection(segments=segments, colors=colors[tree_idx])
+                ax.add_collection(line_collection)
 
-        if (lim_min.size != 0) & (lim_max.size != 0):
-            ax.set_xlim(lim_min[0, 0], lim_max[0, 0])
-            ax.set_ylim(lim_min[0, 1], lim_max[0, 1])
-            ax.set_zlim(lim_min[0, 2], lim_max[0, 2])
+        lim_min = np.min(np.array(lims_min), axis=0)
+        lim_max = np.max(np.array(lims_max), axis=0)
+
+        ax.set_xlim(lim_min[0], lim_max[0])
+        ax.set_ylim(lim_min[1], lim_max[1])
+        if view is None:
+            ax.set_zlim(lim_min[2], lim_max[2])
+        else:
+            ax.set_aspect('equal')
 
         plt.show()
 
@@ -628,6 +653,27 @@ class Skeleton:
         return groups_ids
 
     # Private Methods
+    def _get_unit_factor(self, unit: str) -> np.ndarray:
+        """ Returns factor for unit conversion
+
+        Args:
+            unit: Unit for which to return the conversion factor.
+                Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer)
+
+        Returns:
+            unit_factor (shape=(3,)): Unit conversion factors
+        """
+
+        unit_factors = {
+            'vx': np.array((1, 1, 1)),
+            'nm': np.array(self.parameters.scale),
+            'um': np.array(self.parameters.scale)/1000
+        }
+        assert unit in unit_factors.keys(), 'Invalid unit'
+        unit_factor = unit_factors[unit]
+
+        return unit_factor
+
     def _reset_node_ids(self, start_id: int):
         """ Resets node ids of skeleton to begin with start value.
 
