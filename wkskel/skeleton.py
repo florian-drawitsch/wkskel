@@ -36,8 +36,8 @@ class Skeleton:
         """ The Skeleton constructor expects either a path to a nml file or a Parameters object as input arguments
 
         Args:
-            nml_path: Path to nml file. If constructed via an nml file, the resulting skeleton object represents all of
-                the trees and all of the other properties stored in the file.
+            nml_path: Path to nml file. If constructed via an nml file, the skeleton object is populated with all the
+                trees and additional properties specified in the .nml file
             parameters (optional): Parameters (wkskel.types.Parameters) specifying the most rudimentary properties
                  of the skeleton.
             strict (optional): Controls assertions ensuring that resulting skeleton objects are compatible with
@@ -518,8 +518,8 @@ class Skeleton:
         lims_max = []
         for tree_idx in tree_inds:
 
-            edges = self.edges[tree_idx]
-            nodes = self.nodes[tree_idx]
+            edges = self.edges[tree_idx].copy()
+            nodes = self.nodes[tree_idx].copy()
             nodes['position'] = nodes['position'].multiply(unit_factor)
             if view is 'xy':
                 nodes = nodes.drop([('position', 'z')], axis=1)
