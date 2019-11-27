@@ -30,4 +30,4 @@ conda activate wkskel
 
 ## Getting started
 
-For basic usage examples, see `examples`. A getting started guide in form of a jupyter notebook can be found [here](http://localhost:8888/notebooks/Code/mpi/wkskel/examples/getting_started.ipynb)
+For basic usage examples, see `examples`. A getting started guide in form of a jupyter notebook can be found [here](https://gitlab.mpcdf.mpg.de/connectomics/wkskel/blob/master/examples/getting_started.ipynb)
