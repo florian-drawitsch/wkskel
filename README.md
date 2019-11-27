@@ -27,3 +27,7 @@ Then, to activate the environment run
 ``` bash
 conda activate wkskel
 ```
+
+## Getting started
+
+For basic usage examples, see `examples`. A getting started guide in form of a jupyter notebook can be found [here](http://localhost:8888/notebooks/Code/mpi/wkskel/examples/getting_started.ipynb)
