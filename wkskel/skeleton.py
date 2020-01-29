@@ -516,33 +516,35 @@ class Skeleton:
 
         lims_min = []
         lims_max = []
-        for tree_idx in tree_inds:
 
+        for tree_idx in tree_inds:
             edges = self.edges[tree_idx].copy()
             nodes = self.nodes[tree_idx].copy()
-            nodes['position'] = nodes['position'].multiply(unit_factor)
-            if view is 'xy':
-                nodes = nodes.drop([('position', 'z')], axis=1)
-            elif view is 'xz':
-                nodes = nodes.drop([('position', 'y')], axis=1)
-            elif view is 'yz':
-                nodes = nodes.drop([('position', 'x')], axis=1)
-            lims_min.append(np.min(nodes['position'].values, axis=0))
-            lims_max.append(np.max(nodes['position'].values, axis=0))
 
-            segments = []
-            for edge in edges:
-                n0 = nodes['position'][nodes.id == edge[0]].values[0]
-                n1 = nodes['position'][nodes.id == edge[1]].values[0]
-                segment = [[c for c in n0], [c for c in n1]]
-                segments.append(segment)
+            if len(nodes) > 0:
+                nodes['position'] = nodes['position'].multiply(unit_factor)
+                if view is 'xy':
+                    nodes = nodes.drop([('position', 'z')], axis=1)
+                elif view is 'xz':
+                    nodes = nodes.drop([('position', 'y')], axis=1)
+                elif view is 'yz':
+                    nodes = nodes.drop([('position', 'x')], axis=1)
+                lims_min.append(np.min(nodes['position'].values, axis=0))
+                lims_max.append(np.max(nodes['position'].values, axis=0))
 
-            if view is None:
-                line_collection = art3d.Line3DCollection(segments=segments, colors=colors[tree_idx])
-                ax.add_collection3d(line_collection)
-            else:
-                line_collection = LineCollection(segments=segments, colors=colors[tree_idx])
-                ax.add_collection(line_collection)
+                segments = []
+                for edge in edges:
+                    n0 = nodes['position'][nodes.id == edge[0]].values[0]
+                    n1 = nodes['position'][nodes.id == edge[1]].values[0]
+                    segment = [[c for c in n0], [c for c in n1]]
+                    segments.append(segment)
+
+                if view is None:
+                    line_collection = art3d.Line3DCollection(segments=segments, colors=colors[tree_idx])
+                    ax.add_collection3d(line_collection)
+                else:
+                    line_collection = LineCollection(segments=segments, colors=colors[tree_idx])
+                    ax.add_collection(line_collection)
 
         lim_min = np.min(np.array(lims_min), axis=0)
         lim_max = np.max(np.array(lims_max), axis=0)
