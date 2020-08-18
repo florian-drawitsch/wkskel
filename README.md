@@ -2,6 +2,13 @@
 
 A python library for scientific analysis and manipulation of webKnossos skeleton tracings.
 
+## Package installation with pip (pypi)
+
+To install the package via the python package index:
+```bash
+pip install wkskel
+```
+
 ## Package installation with pip (local)
 
 To install the package locally run pip install in the wkskel main folder:
