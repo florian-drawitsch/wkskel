@@ -1,5 +1,6 @@
 numpy==1.17.2
 pandas==0.25.1
+cython==0.29.21
 matplotlib==3.1.1
 networkx==2.3
 wknml==0.0.9

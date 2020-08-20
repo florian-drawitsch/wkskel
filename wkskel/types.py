@@ -23,7 +23,6 @@ Parameters = namedtuple(
     defaults=[defaults[1] for defaults in list(PARAMETERS_DEFAULTS)]
 )
 
-
 # Define Nodes type
 class Nodes(pd.DataFrame):
     """The Nodes class facilitates a consistent tabular representation of skeleton nodes
