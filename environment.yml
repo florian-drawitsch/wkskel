@@ -5,8 +5,8 @@ dependencies:
   - pip
   - numpy
   - pandas
-  - cython
   - networkx
   - matplotlib
   - pip:
     - wknml
+

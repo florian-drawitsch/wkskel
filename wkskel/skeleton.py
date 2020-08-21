@@ -326,13 +326,7 @@ class Skeleton:
             id_max = self.max_node_id()
             id = list(range(id_max+1, id_max+len(position_x)+1))
 
-        if radius is None:
-            radius = [self.defaults['node']['radius'] for x in range(len(position_x))]
-
-        if comment is None:
-            comment = [self.defaults['node']['comment'] for x in range(len(position_x))]
-
-        nodes = Nodes().append_from_list(id, position_x, position_y, position_z, radius, rotation_x, rotation_y,
+        nodes = Nodes.from_list(id, position_x, position_y, position_z, radius, rotation_x, rotation_y,
                                          rotation_z, inVP, inMag, bitDepth, interpolation, time, comment)
 
         return nodes
@@ -695,7 +689,7 @@ class Skeleton:
 
         add_id = start_id - self.min_node_id()
         for tree_idx, _ in enumerate(self.nodes):
-            self.nodes[tree_idx].id += add_id
+            self.nodes[tree_idx].nodes['id'] += add_id
             self.edges[tree_idx] += add_id
 
     def _reset_tree_ids(self, start_id: int):

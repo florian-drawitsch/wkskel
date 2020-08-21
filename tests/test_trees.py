@@ -22,6 +22,7 @@ def add_trees_from_skel():
 
     # Test merging skeletons both having both root and (nested) group trees
     skel = Skeleton('testdata/01_ref.nml')
+    assert all([Skeleton._num_conn_comp(Skeleton._get_graph(nodes, edges)) == 1 for nodes, edges in zip(skel.nodes, skel.edges)])
     skel.add_trees_from_skel(Skeleton('testdata/02_ref.nml'))
 
     # Test for unique node and tree ids in merged nml
@@ -31,6 +32,7 @@ def add_trees_from_skel():
     assert all(c < 2)
 
     # Test writing
+    assert all([Skeleton._num_conn_comp(Skeleton._get_graph(nodes, edges)) == 1 for nodes, edges in zip(skel.nodes, skel.edges)])
     skel.write_nml('testdata/01_02_merged_gen.nml')
 
     # Test reading

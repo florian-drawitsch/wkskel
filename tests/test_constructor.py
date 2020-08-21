@@ -1,4 +1,17 @@
-from wkskel import Skeleton
+import numpy as np
+from wkskel import Skeleton, Nodes
+
+def test_nodes():
+
+    nodes = Nodes.from_list(list(range(5)),
+                            list(np.random.randint(1, 100, 5)),
+                            list(np.random.randint(1, 100, 5)),
+                            list(np.random.randint(1, 100, 5)))
+
+    nodes.append_from_list(list(range(5, 10)),
+                           list(np.random.randint(1, 100, 5)),
+                           list(np.random.randint(1, 100, 5)),
+                           list(np.random.randint(1, 100, 5)))
 
 
 def construct_from_nml():
@@ -25,6 +38,7 @@ def construct_from_parameters_add_tree():
 
 
 if __name__ == '__main__':
+    test_nodes()
     construct_from_nml()
     construct_from_parameters_empty()
     construct_from_parameters_add_tree()
