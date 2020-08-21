@@ -25,7 +25,7 @@ Parameters = namedtuple(
 
 
 # Define Nodes Type
-class Nodes(object):
+class Nodes:
 
     NODES_DEFAULTS = {
         ('id', ''): [None, 'int32'],

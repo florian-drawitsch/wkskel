@@ -3,7 +3,7 @@ from wkskel import Skeleton
 
 def plot():
     skel = Skeleton('testdata/01_02_merged_ref.nml')
-    skel.plot(tree_inds=[0, 2], unit='um', view=None)
+    skel.plot(unit='um', view=None, colors='Dark2')
 
 
 if __name__ == '__main__':

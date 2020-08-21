@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import networkx as nx
+from matplotlib import colors, cm
 from matplotlib import pyplot as plt
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d import Axes3D, art3d
@@ -451,7 +452,7 @@ class Skeleton:
     def plot(self,
              tree_inds: Union[int, List[int]] = None,
              view: str = None,
-             colors: Union[Tuple[float, float, float, float], List[Tuple[float, float, float, float]]] = None,
+             colors: Union[Tuple[float, float, float, float], List[Tuple[float, float, float, float]], str] = None,
              unit: str = 'um',
              show: bool = True,
              ax: plt.axes = None):
@@ -465,6 +466,8 @@ class Skeleton:
                 Default: Plot as 3D projection
             colors (optional): Colors in which trees should be plotted. If only one RGBA tuple is specified, it is
                 broadcasted over all trees. Alternatively, a list providing RGBA tuples for each tree can be passed.
+                Lastly, the name of a mnatplotlib colormap (https://matplotlib.org/tutorials/colors/colormaps.html) can
+                be passed as a str.
                 Default: Skeleton colors (self.colors) are used
             unit (optional): Specifies in which unit the plot should be generated.
                 Options: 'vx' (voxels), 'nm' (nanometer), 'um' (micrometer).
@@ -484,8 +487,12 @@ class Skeleton:
 
         if colors is None:
             colors = self.colors
+        elif type(colors) is str:
+            cmap = cm.get_cmap(colors)
+            colors = [cmap(x) for x in np.linspace(0, 1, self.num_trees())]
         elif type(colors[0]) is not Sequence:
             colors = [colors] * self.num_trees()
+
 
         unit_factor = self._get_unit_factor(unit)
 
