@@ -21,6 +21,10 @@
     </edges>
   </thing>
   <branchpoints />
-  <comments />
+  <comments>
+    <comment content="" node="1" />
+    <comment content="" node="2" />
+    <comment content="" node="3" />
+  </comments>
   <groups />
 </things>

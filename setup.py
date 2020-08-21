@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="wkskel",
-    version="0.0.1",
+    version="0.0.2",
     author="Florian Drawitsch",
     author_email="florian.drawitsch@brain.mpg.de",
     description="A library for scientific analysis and manipulation of webKnossos skeleton tracings",
@@ -18,4 +18,11 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
+    install_requires=[
+        'numpy>=1.1',
+        'pandas>=0.25',
+        'matplotlib>=3.1',
+        'networkx>=2.3',
+        'wknml>=0.0.9'
+    ]
 )
