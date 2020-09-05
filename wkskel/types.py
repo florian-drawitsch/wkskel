@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from collections import namedtuple
-from typing import List, Tuple, Optional
+from typing import Tuple, Optional
 
 
 # Define Parameters type

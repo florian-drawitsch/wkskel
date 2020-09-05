@@ -524,11 +524,11 @@ class Skeleton:
 
             if len(nodes) > 0:
                 nodes['position'] = nodes['position'].multiply(unit_factor)
-                if view is 'xy':
+                if view == 'xy':
                     nodes = nodes.drop([('position', 'z')], axis=1)
-                elif view is 'xz':
+                elif view == 'xz':
                     nodes = nodes.drop([('position', 'y')], axis=1)
-                elif view is 'yz':
+                elif view == 'yz':
                     nodes = nodes.drop([('position', 'x')], axis=1)
                 lims_min.append(np.min(nodes['position'].values, axis=0))
                 lims_max.append(np.max(nodes['position'].values, axis=0))
