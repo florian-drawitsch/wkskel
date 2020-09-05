@@ -62,7 +62,7 @@ class Skeleton:
         self.names = list()
         self.colors = list()
         self.tree_ids = list()
-        self.group_ids = list()
+        self.group_ids = [None]
         self.groups = list()
         self.branchpoints = list()
         self.parameters = Parameters()
@@ -279,6 +279,8 @@ class Skeleton:
         else:
             self.groups = Skeleton._group_append(self.groups, parent_id, new_group)
 
+        self.group_ids.append(id)
+
         return id, name
 
     def delete_group(self, id, target_id):
@@ -346,7 +348,7 @@ class Skeleton:
         id_max = self.max_node_id()
         id = np.array(range(id_max + 1, id_max + positions.shape[0] + 1)).reshape(-1, 1)
 
-        nodes = Nodes().append_from_numpy(np.append(id, positions, axis=1))
+        nodes = Nodes.from_numpy(np.append(id, positions, axis=1))
 
         return nodes
 

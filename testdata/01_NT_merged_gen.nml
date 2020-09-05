@@ -9,7 +9,7 @@
     <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
     <zoomLevel zoom="5.781342597250309" />
   </parameters>
-  <thing color.a="1.0" color.b="0.7568627595901489" color.g="0.4470588266849518" color.r="0.07058823853731155" groupId="1" id="1" name="bvc_em">
+  <thing color.a="1.0" color.b="0.7568627595901489" color.g="0.4470588266849518" color.r="0.07058823853731155" id="1" name="bvc_em">
     <nodes>
       <node bitDepth="4" id="70" inMag="3" inVp="0" interpolation="True" radius="112.399994" rotX="0.0" rotY="0.0" rotZ="0.0" time="1486471913589" x="41149.0" y="43611.0" z="785.0" />
       <node bitDepth="4" id="45" inMag="3" inVp="2" interpolation="True" radius="112.399994" rotX="90.0" rotY="0.0" rotZ="0.0" time="1486471834957" x="40874.0" y="46160.0" z="155.0" />
@@ -114,7 +114,7 @@
       <edge source="44" target="45" />
     </edges>
   </thing>
-  <thing color.a="1.0" color.b="1.0" color.g="0.2078431397676468" color.r="0.5843137502670288" id="2" name="bvb_em">
+  <thing color.a="1.0" color.b="1.0" color.g="0.2078431397676468" color.r="0.5843137502670288" groupId="1" id="2" name="bvb_em">
     <nodes>
       <node bitDepth="4" id="184" inMag="3" inVp="2" interpolation="True" radius="112.399994" rotX="90.0" rotY="0.0" rotZ="0.0" time="1486472523193" x="42475.0" y="38865.0" z="270.0" />
       <node bitDepth="4" id="186" inMag="3" inVp="2" interpolation="True" radius="112.399994" rotX="90.0" rotY="0.0" rotZ="0.0" time="1486472525945" x="42446.0" y="39499.0" z="126.0" />
@@ -235,7 +235,7 @@
       <edge source="195" target="196" />
     </edges>
   </thing>
-  <thing color.a="1.0" color.b="1.0" color.g="0.6196078658103943" color.r="0.5176470875740051" groupId="3" id="3" name="bva_em">
+  <thing color.a="1.0" color.b="1.0" color.g="0.6196078658103943" color.r="0.5176470875740051" id="3" name="bva_em">
     <nodes>
       <node bitDepth="4" id="163" inMag="3" inVp="2" interpolation="True" radius="112.399994" rotX="90.0" rotY="0.0" rotZ="0.0" time="1486472429033" x="34459.0" y="33462.0" z="484.0" />
       <node bitDepth="4" id="109" inMag="3" inVp="2" interpolation="True" radius="112.399994" rotX="90.0" rotY="0.0" rotZ="0.0" time="1486472236180" x="33376.0" y="37242.0" z="198.0" />
@@ -364,7 +364,7 @@
       <edge source="160" target="161" />
     </edges>
   </thing>
-  <thing color.a="1.0" color.b="0.0" color.g="0.0" color.r="0.0" id="4" name="">
+  <thing color.a="1.0" color.b="0.0" color.g="0.0" color.r="0.0" groupId="3" id="4" name="">
     <nodes>
       <node bitDepth="8" id="208" inMag="1" inVp="1" interpolation="True" radius="100.0" rotX="0.0" rotY="0.0" rotZ="0.0" time="0" x="40000" y="45000" z="1000" />
     </nodes>
