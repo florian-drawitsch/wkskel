@@ -43,19 +43,19 @@ class Nodes:
    """
 
     NODES_DEFAULTS = {
-        ('id', ''): [None, int],
-        ('position', 'x'): [None, int],
-        ('position', 'y'): [None, int],
-        ('position', 'z'): [None, int],
-        ('radius', ''): [100.0, float],
-        ('rotation', 'x'): [0.0, float],
-        ('rotation', 'y'): [0.0, float],
-        ('rotation', 'z'): [0.0, float],
-        ('inVp', ''): [1, int],
-        ('inMag', ''): [1, int],
-        ('bitDepth', ''): [8, int],
+        ('id', ''): [None, np.int32],
+        ('position', 'x'): [None, np.int32],
+        ('position', 'y'): [None, np.int32],
+        ('position', 'z'): [None, np.int32],
+        ('radius', ''): [100.0, np.float32],
+        ('rotation', 'x'): [0.0, np.float32],
+        ('rotation', 'y'): [0.0, np.float32],
+        ('rotation', 'z'): [0.0, np.float32],
+        ('inVp', ''): [1, np.int8],
+        ('inMag', ''): [1, np.int8],
+        ('bitDepth', ''): [8, np.int8],
         ('interpolation', ''): [True, bool],
-        ('time', ''): [0, int],
+        ('time', ''): [0, np.int64],
         ('comment', ''): ['', str]
     }
 
