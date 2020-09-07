@@ -62,7 +62,7 @@ class Skeleton:
         self.names = list()
         self.colors = list()
         self.tree_ids = list()
-        self.group_ids = [None]
+        self.group_ids = list()
         self.groups = list()
         self.branchpoints = list()
         self.parameters = Parameters()
@@ -94,8 +94,8 @@ class Skeleton:
                  nodes: Nodes = Nodes(),
                  edges: Union[List[Tuple[int, int]], np.ndarray] = None,
                  tree_id: int = None,
-                 group_id: int = None,
                  name: str = '',
+                 group_id: int = None,
                  color: Tuple[float, float, float, float] = None):
         """ Appends new tree to skeleton.
 
@@ -103,8 +103,9 @@ class Skeleton:
             nodes (optional): Nodes representing tree to be added
             edges (optional): Edges representing tree to be added
             tree_id (optional): Tree id to be used for new tree. Default: Highest current tree id + 1
-            group_id (optional): Group id to be used for new tree. Default: None
             name (optional): Name to be used for new tree. Default: Empty str
+            group_id (optional): Group id to be used for new tree. If passed group id does not exist, it is created.
+                Default: None
             color (optional): Color to be used for new tree specified as (r, g, b, alpha). Default: (0, 0, 0, 1)
         """
 
@@ -278,8 +279,6 @@ class Skeleton:
             self.groups.append(new_group)
         else:
             self.groups = Skeleton._group_append(self.groups, parent_id, new_group)
-
-        self.group_ids.append(id)
 
         return id, name
 
